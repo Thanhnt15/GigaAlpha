@@ -43,8 +43,11 @@ logs/*.json
 
 # Outputs (Generated reports and charts)
 outputs/**/*
+!outputs/**/
 !outputs/**/.gitkeep
 !outputs/html/*.html
+# Always ignore Excel files regardless of folder
+*.xlsx
 
 # IDEs
 .vscode/
