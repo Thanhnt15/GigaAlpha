@@ -44,6 +44,7 @@ logs/*.json
 # Outputs (Generated reports and charts)
 outputs/**/*
 !outputs/**/.gitkeep
+!outputs/html/*.html
 
 # IDEs
 .vscode/
