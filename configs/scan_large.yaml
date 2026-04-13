@@ -1,0 +1,26 @@
+data:
+  path: "data/dic_range_bar.pickle"
+  segments:
+    - ["2022_02_07", "2026_04_01"]
+backtest:
+  alpha_name: "001"
+  gen_name: "1_1"
+  lst_bar_size: [15.0]
+  lst_fee: [0.175]
+  cores: 20
+storage:
+  enabled: true
+  output_dir: "outputs/excel"
+visualize:
+  enabled: true
+  output_dir: "outputs/html"
+  chart_colors: ['#081d58', '#225ea8', '#41b6c4', '#7ed957', '#edf8b1']
+compute_score:
+  enabled: true
+  num_neighbors: 4
+  cores: 20
+upload:
+  enabled: true
+  target_folder_id: "117gtokgAHiGDRF4c-6vmiXz75i_M1XQu"
+log_link:
+  sheet_path: "logs/drive_links.json"

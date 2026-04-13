@@ -1,0 +1,57 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Secrets & Environment
+.env
+.venv
+venv/
+ENV/
+*.pickle
+*.json
+!configs/*.json
+!gigaalpha/strategies/**/*.json
+
+# Project Data & Logs (Local only)
+data/*.pickle
+!data/sample_data.pickle
+data/*.csv
+logs/*.log
+logs/*.json
+
+# Keep directory structure
+!**/.gitkeep
+
+# Outputs (Generated reports and charts)
+outputs/html/
+outputs/excel/
+outputs/
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
