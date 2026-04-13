@@ -9,3 +9,4 @@ plotly
 xlsxwriter
 pymongo
 pydantic
+scipy
