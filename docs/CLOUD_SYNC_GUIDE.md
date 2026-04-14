@@ -58,7 +58,27 @@ Enable deployment in your configuration (`deploy: enabled: true`). The system wi
 
 ---
 
-## III. Unified Configuration Summary
+## III. Automated Run with Token (Portable Mode)
+
+The most convenient way for automated servers or distributed research is using a **GitHub Personal Access Token (PAT)**. This allows anyone to clone and run the system by simply providing a token in the `.env` file.
+
+### 1. Generate GitHub PAT
+1.  Go to **GitHub Settings > Developer settings > Personal access tokens > Tokens (classic)**.
+2.  Click **Generate new token (classic)**.
+3.  Select scopes: `repo` (all) and `workflow`.
+4.  Copy the generated token immediately.
+
+### 2. Configure Environment
+Add the following line to your `.env` file:
+```env
+GITHUB_TOKEN="your_ghp_token_value_here"
+```
+
+*The GigaAlpha engine will automatically detect this token and use it to authenticate all Git push operations during the scan.*
+
+---
+
+## IV. Unified Configuration Summary
 
 Ensure the following blocks are configured in your YAML manifest:
 

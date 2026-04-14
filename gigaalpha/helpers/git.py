@@ -1,5 +1,5 @@
 import subprocess
-import os
+import os, re
 import logging
 from pathlib import Path
 from typing import Tuple, Optional, List
@@ -63,6 +63,28 @@ class Git:
     def get_remote_url(self, remote: str = "origin") -> str:
         res, success = self.run("remote", "get-url", remote)
         return res.stdout.strip() if success else ""
+
+    def inject_token(self, token: str, remote: str = "origin") -> bool:
+        """
+        Dynamically rewrite the remote URL to include a Personal Access Token.
+        Example: https://github.com/user/repo -> https://token@github.com/user/repo
+        """
+        if not token: return False
+        
+        url = self.get_remote_url(remote)
+        if not url: return False
+
+        if "github.com" in url and url.startswith("https://"):
+            # Remove existing token if present
+            clean_url = re.sub(r"https://[^@]+@", "https://", url)
+            new_url = clean_url.replace("https://", f"https://{token}@")
+            
+            _, success = self.run("remote", "set-url", remote, new_url)
+            if success:
+                logger.debug(f"[Git] Successfully injected token into '{remote}' URL.")
+            return success
+        
+        return False
 
     def checkout(self, branch: str, b: bool = False):
         args = ["checkout"]

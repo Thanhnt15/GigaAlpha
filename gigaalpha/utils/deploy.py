@@ -27,11 +27,14 @@ def get_gh_pages_base_url(git: Git) -> str:
     
     return ""
 
-def deploy_to_gh_pages(repo_path: str, branch: str, file_paths: List[Path], commit_message: str) -> Tuple[bool, str, Dict[str, str]]:
+def deploy_to_gh_pages(repo_path: str, branch: str, file_paths: List[Path], commit_message: str, token: str = None) -> Tuple[bool, str, Dict[str, str]]:
     """
     Refactored deployment logic using the new Stateful Git Helper.
     """
     git = Git(repo_path)
+    if token:
+        git.inject_token(token)
+        
     original_branch = git.get_current_branch()
     base_url = get_gh_pages_base_url(git)
     deployed_urls = {}
