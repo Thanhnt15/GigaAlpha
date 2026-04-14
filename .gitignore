@@ -38,6 +38,7 @@ data/*.csv
 logs/*.log
 logs/*.json
 logs/*.txt
+outputs/
 
 # Keep directory structure
 !**/.gitkeep
