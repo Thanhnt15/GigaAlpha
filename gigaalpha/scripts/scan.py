@@ -15,12 +15,19 @@ if __name__ == '__main__':
     logger = logging.getLogger(__name__)
     
     parser = argparse.ArgumentParser(description="GigaAlpha Scan Pipeline")
-    parser.add_argument('--config', default='configs/default.yaml', help='Path to YAML config file (e.g. configs/default.yaml)')
+    parser.add_argument('--config', default='configs/default.yaml', help='Path to YAML config file (default: configs/default.yaml)')
     args = parser.parse_args()
 
-    pipeline_config = PipelineConfig.load(PROJECT_ROOT / args.config)
+    # Determine config path
+    config_path = Path(args.config)
     
-    logger.info(f"Running Scan Pipeline with config: {args.config}")
+    # Check if absolute or relative to root
+    if not config_path.is_absolute():
+        config_path = PROJECT_ROOT / config_path
+
+    pipeline_config = PipelineConfig.load(str(config_path))
+    
+    logger.info(f"Running Scan Pipeline with config: {config_path.name}")
 
     pipeline = ScanPipeline(pipeline_config)
     pipeline.run_backtest_and_statistics()
@@ -30,3 +37,6 @@ if __name__ == '__main__':
         
     if pipeline_config.upload.enabled:
         pipeline.run_upload_to_drive()
+
+    if pipeline_config.deploy.enabled:
+        pipeline.run_deploy_to_github()
