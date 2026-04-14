@@ -24,9 +24,12 @@ def _single_simulation(config: Dict[str, Any], segments: Optional[List]):
         alpha_params = {k: config[k] for k in alpha_keys if k in config}
         gen_params = {k: config[k] for k in gen_keys if k in config}
 
+        if _DIC_DATA_WORKER is None or config['frequency'] not in _DIC_DATA_WORKER:
+            raise ValueError(f"Data for frequency {config['frequency']} not found in worker.")
+
         sim = Simulator(
-            data=_DIC_DATA_WORKER[config['bar_size']],
-            bar_size=config['bar_size'],
+            data=_DIC_DATA_WORKER[config['frequency']],
+            frequency=config['frequency'],
             alpha_name=config['alpha_name'],
             alpha_params=alpha_params,
             gen_name=config['gen_name'],
@@ -59,13 +62,14 @@ class BacktestService:
         from tqdm import tqdm
         import multiprocessing as mp
         
+        global _DIC_DATA_WORKER
+        _DIC_DATA_WORKER = self.dic_data
         single_simulation_partial = partial(_single_simulation, segments=self.segments)
         all_results = []
         
         with mp.Pool(processes=cores, initializer=_init_data, initargs=(self.dic_data,)) as pool:
-            for res in tqdm(pool.imap_unordered(single_simulation_partial, lst_configs), 
+            for res in tqdm(pool.imap_unordered(single_simulation_partial, lst_configs, chunksize=10), 
                             total=len(lst_configs), desc="Parallel Backtest"):
                 if res:
-                    all_results.extend(res)
-                    
+                    all_results.extend(res)       
         return all_results

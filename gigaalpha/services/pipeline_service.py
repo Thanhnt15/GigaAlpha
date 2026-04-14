@@ -68,7 +68,7 @@ class ScanPipeline:
         lst_configs = ScanParams.gen_all_params(
             alpha_name = self.config.backtest.alpha_name,
             gen_name = self.config.backtest.gen_name,
-            lst_bar_size = self.config.backtest.lst_bar_size,
+            lst_frequency = self.config.backtest.lst_frequency,
             lst_fee = self.config.backtest.lst_fee,
         )
         
