@@ -18,7 +18,7 @@ class DataConfig:
 class BacktestConfig:
     alpha_name: str = ""
     gen_name: str = ""
-    lst_frequency: List[float] = field(default_factory=list)
+    lst_frequency: List[float] = field(default_factory=lambda: list(range(10,101,1)))
     lst_fee: List[float] = field(default_factory=list)
     cores: int = 1
 

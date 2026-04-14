@@ -25,7 +25,9 @@ def _visualize_and_storage_worker(task):
             y = sorted([col for col in seg_df.columns if 'gen_' in col and col != 'gen_name'])[0]
 
             target_cols = [z, x, y]
-            output_path_html = Path(config.visualize.output_dir) / f"3D_{config.backtest.alpha_name}_{config.backtest.gen_name}_{segment}.html"
+            # Use absolute path relative to PROJECT_ROOT
+            output_dir = PROJECT_ROOT / config.visualize.output_dir
+            output_path_html = output_dir / f"3D_{config.backtest.alpha_name}_{config.backtest.gen_name}_{segment}.html"
             visualizer.run_visualization(
                 title=f"Sharpe_3D: Alpha_{config.backtest.alpha_name} | Gen_{config.backtest.gen_name} | {segment}", 
                 target_cols=target_cols, 
@@ -33,7 +35,9 @@ def _visualize_and_storage_worker(task):
                 output_path=output_path_html
             )
         if config.storage.enabled:
-            output_path_excel = Path(config.storage.output_dir) / f"alpha_{config.backtest.alpha_name}_{config.backtest.gen_name}_{segment}.xlsx"
+            # Use absolute path relative to PROJECT_ROOT
+            output_dir = PROJECT_ROOT / config.storage.output_dir
+            output_path_excel = output_dir / f"alpha_{config.backtest.alpha_name}_{config.backtest.gen_name}_{segment}.xlsx"
             storage = StorageService(df=seg_df, output_path=output_path_excel)
             storage.save_to_xlsx()
 
@@ -119,7 +123,8 @@ class ScanPipeline:
         """Phase 2.5: Upload Excel reports to Google Drive in parallel."""
         if self.config.upload.enabled:
             logger.info("Uploading reports to Google Drive in parallel...")
-            target_dir = Path(self.config.storage.output_dir)
+            # Use absolute path relative to PROJECT_ROOT
+            target_dir = PROJECT_ROOT / self.config.storage.output_dir
             if not target_dir.exists():
                 logger.warning(f"Upload directory not found: {target_dir}")
                 return
@@ -149,7 +154,8 @@ class ScanPipeline:
             
             if new_urls:
                 from gigaalpha.utils.track_link import update_drive_link_json
-                json_path = Path(self.config.log_link.sheet_path)
+                # Ensure the path is absolute relative to PROJECT_ROOT
+                json_path = PROJECT_ROOT / self.config.log_link.sheet_path
                 update_drive_link_json(str(json_path), new_urls)
                     
             logger.info("Uploading completed.\n")
