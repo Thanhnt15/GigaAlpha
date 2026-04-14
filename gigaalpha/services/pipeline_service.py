@@ -3,11 +3,11 @@ import pandas as pd
 import logging, os
 from pathlib import Path
 
-from gigaalpha.services.backtest import BacktestService
-from gigaalpha.services.compute_score import ScoringService
-from gigaalpha.services.statistic import StatisticsService
-from gigaalpha.services.visualization import VisualizationService
-from gigaalpha.services.storage import StorageService
+from gigaalpha.services.backtest_service import BacktestService
+from gigaalpha.services.scoring_service import ScoringService
+from gigaalpha.services.statistics_service import StatisticsService
+from gigaalpha.services.visualization_service import VisualizationService
+from gigaalpha.services.storage_service import StorageService
 from gigaalpha.core.scanner import ScanParams
 from gigaalpha.utils.config import PipelineConfig
 
@@ -46,7 +46,7 @@ def _upload_worker(task):
     local_path, config = task
     try:
         if config.upload.enabled:
-            from gigaalpha.services.upload import UploadService
+            from gigaalpha.services.upload_service import UploadService
             uploader = UploadService(
                 local_path=str(local_path),
                 token_path=os.getenv('GDRIVE_TOKEN_PATH'),
@@ -173,7 +173,7 @@ class ScanPipeline:
                 logger.info("No newly generated HTML files found to deploy.")
                 return
 
-            from gigaalpha.services.deployment import DeploymentService
+            from gigaalpha.services.deployment_service import DeploymentService
             deployer = DeploymentService(branch=self.config.deploy.branch)
             new_urls = deployer.deploy_reports(
                 html_files=html_files,

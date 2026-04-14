@@ -6,7 +6,7 @@ sys.path.append(str(PROJECT_ROOT))
 
 from gigaalpha.utils.config import PipelineConfig
 from gigaalpha.utils.logger import setup_logging
-from gigaalpha.services.pipeline import ScanPipeline
+from gigaalpha.services.pipeline_service import ScanPipeline
 import gigaalpha.strategies
 
 if __name__ == '__main__':
