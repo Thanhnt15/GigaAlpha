@@ -33,6 +33,7 @@ ENV/
 
 # Project Data & Logs (Local only)
 data/*.pickle
+data/*.pkl
 !data/sample_data.pickle
 data/*.csv
 logs/*.log

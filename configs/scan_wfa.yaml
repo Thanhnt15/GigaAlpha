@@ -1,5 +1,5 @@
 data:
-  path: "data/dic_range_bar.pickle"
+  path: "data/dic_freqs_alpha_base.pkl"
   segments:
     - ["2022_01_01", "2023_01_01"]
     - ["2022_04_01", "2023_04_01"]
@@ -14,12 +14,11 @@ data:
     - ["2024_07_01", "2025_07_01"]
     - ["2024_10_01", "2025_10_01"]
     - ["2025_01_01", "2026_01_01"]
-    - ["2025_04_01", "2026_04_01"]
-    
+
 backtest:
   alpha_name: "001"
   gen_name: "1_1"
-  lst_bar_size: [15.0]
+  lst_frequency: [15.0]
   lst_fee: [0.175]
   cores: 20
 

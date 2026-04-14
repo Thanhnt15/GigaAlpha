@@ -1,31 +1,22 @@
 data:
-  path: "data/dic_range_bar.pickle"
-  segments:
-    - ["2022_02_07", "2026_04_01"]
-    - ["2022_02_07", "2023_01_01"]
+  path: "data/dic_freqs_alpha_base.pkl"
+  segments: 
+    - ["2022_01_01", "2026_01_01"]
+    - ["2022_01_01", "2023_01_01"]
     - ["2023_01_01", "2024_01_01"]
     - ["2024_01_01", "2025_01_01"]
     - ["2025_01_01", "2026_01_01"]
-    - ["2026_01_01", "2026_04_01"]
-
 backtest:
   alpha_name: "001"
   gen_name: "1_1"
-  lst_bar_size: [15.0]
+  lst_frequency: [15]
   lst_fee: [0.175]
   cores: 20
 
 compute_score:
   enabled: false
   num_neighbors: 4
-  col_strategy: "strategy"
-  col_target: "sharpe"
-  mode_test: false
-  cores: 20
-
-storage:
-  enabled: false
-  output_dir: "outputs/excel"
+  cores: 30
 
 visualize:
   enabled: false
@@ -33,15 +24,19 @@ visualize:
   chart_colors: ['#081d58', '#225ea8', '#41b6c4', '#7ed957', '#edf8b1']
   cores: 8
 
+storage:
+  enabled: false
+  output_dir: "outputs/excel"
+
 upload:
   enabled: false
-  target_folder_id: "117gtokgAHiGDRF4c-6vmiXz75i_M1XQu"
+  target_folder_id: ""
   cores: 10
-  
+
 deploy:
   enabled: false
   branch: "gh-pages"
 
 log_link:
   sheet_path: "logs/drive_links.json"
-  html_path : "logs/html_links.txt"
+
