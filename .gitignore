@@ -37,6 +37,7 @@ data/*.pickle
 data/*.csv
 logs/*.log
 logs/*.json
+logs/*.txt
 
 # Keep directory structure
 !**/.gitkeep
