@@ -5,8 +5,8 @@ PROJECT_ROOT = Path(__file__).parents[2]
 sys.path.append(str(PROJECT_ROOT))
 
 import gigaalpha.strategies
-from gigaalpha.services.backtest import BacktestService
-from gigaalpha.services.statistic import Statistics
+from gigaalpha.services.backtest_service import BacktestService
+from gigaalpha.services.statistics_service import StatisticsService
 from gigaalpha.core.scanner import ScanParams
 from gigaalpha.utils.config import PipelineConfig
 from gigaalpha.utils.logger import setup_logging
@@ -26,7 +26,7 @@ if __name__ == '__main__':
     lst_configs = ScanParams.gen_all_params(
         alpha_name = bt_config.alpha_name,
         gen_name = bt_config.gen_name,
-        lst_bar_size = bt_config.lst_bar_size,
+        lst_frequency = bt_config.lst_frequency,
         lst_fee = bt_config.lst_fee,
     )
 
@@ -40,7 +40,8 @@ if __name__ == '__main__':
     results = []      
     for segment in pipeline_config.data.segments:  
         segment_val = f'{segment[0]}_{segment[1]}'
-        res = Statistics.calc_sharpe_tvr_summary(df=reports[reports['segment'] == segment_val], segment_val=segment_val)
+        stats_service = StatisticsService(df=reports[reports['segment'] == segment_val])
+        res = stats_service.run_statistics(segment_val=segment_val)
         logger.info(res)
 
 

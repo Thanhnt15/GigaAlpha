@@ -23,7 +23,7 @@ graph TD
 
 - **Dịch vụ sử dụng**: `BacktestService`, `ScoringService`, `StatisticsService`.
 - **Luồng đi**:
-    1. **Load Config**: Đọc `default.yaml` để lấy danh sách alpha, bar_size, segments.
+    1. **Load Config**: Đọc `default.yaml` để lấy danh sách alpha, frequency, segments.
     2. **Generate Params**: `ScanParams.gen_all_params` tạo ra hàng nghìn tổ hợp tham số từ Registry.
     3. **Simulation**: `BacktestService` gọi `Simulator` (Core) để chạy backtest song song.
        - Mỗi Alpha được tính toán: `Signal` -> `Position` -> `TVR/Fee` -> `Profits`.

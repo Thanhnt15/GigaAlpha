@@ -2,17 +2,17 @@ from gigaalpha.core.registry import ALPHA_REGISTRY, GEN_REGISTRY
 from gigaalpha.core.metrics import AlphaDomains
 
 class Simulator:
-    def __init__(self, data, bar_size, alpha_name, alpha_params, gen_name, gen_params, fee=0.175):
+    def __init__(self, data, frequency, alpha_name, alpha_params, gen_name, gen_params, fee=0.175):
         self.data = data.copy()
         self.fee = fee
-        self.bar_size = bar_size
+        self.frequency = frequency
 
         self.alpha_fn     = ALPHA_REGISTRY[alpha_name]['function']
         self.alpha_params = alpha_params
         self.gen_fn       = GEN_REGISTRY[gen_name]['function']
         self.gen_params   = gen_params
 
-        strategy_id = [str(bar_size)] if bar_size else []
+        strategy_id = [str(frequency)] if frequency else []
         for v in alpha_params.values():
             strategy_id.append(str(round(v, 4)) if isinstance(v, (float, int)) else str(v))
         for v in gen_params.values():
@@ -20,7 +20,7 @@ class Simulator:
             
         self.report = {
             'strategy':   "_".join(strategy_id),
-            'bar_size':   bar_size,
+            'frequency':  frequency,
             'fee':        fee,
             'alpha_name': alpha_name,
             'gen_name':   gen_name,

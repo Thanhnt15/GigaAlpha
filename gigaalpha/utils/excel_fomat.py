@@ -9,7 +9,7 @@ logger = logging.getLogger(__name__)
 def sort_report_data(df: pd.DataFrame) -> pd.DataFrame:
     """Sort rows based on backtest parameters."""
     df = df.copy()
-    global_paras = ['bar_size']
+    global_paras = ['frequency']
     alpha_params = sorted([c for c in df.columns if c.startswith('alpha_') and c != 'alpha_name'])
     gen_params = sorted([c for c in df.columns if c.startswith('gen_') and c != 'gen_name'])
     
@@ -25,7 +25,7 @@ def rename_and_reorder_report_columns(df: pd.DataFrame) -> pd.DataFrame:
     """Rename columns to reporting standards and reorder linearly."""
     mapping = {
         'strategy': 'Strategy',
-        'bar_size': 'Bar_Size',
+        'frequency': 'Frequency',
         'sharpe': 'Sharpe Ratio',
         'hhi': 'HHI',
         'psr': 'PSR (%)',
@@ -44,7 +44,7 @@ def rename_and_reorder_report_columns(df: pd.DataFrame) -> pd.DataFrame:
     df_new = df.rename(columns=mapping)
 
     strategy_col = ['Strategy']
-    base_param_col = ['Bar_Size']
+    base_param_col = ['Frequency']
     alpha_cols = sorted([c.title() for c in df.columns if c.startswith('alpha_') and c != 'alpha_name'])
     gen_cols = sorted([c.title() for c in df.columns if c.startswith('gen_') and c != 'gen_name'])
     
