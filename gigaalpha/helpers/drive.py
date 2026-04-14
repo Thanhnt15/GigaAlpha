@@ -1,5 +1,5 @@
 import os, pickle, socket, time, logging
-from typing import List, Optional
+from typing import List, Optional, Dict
 from googleapiclient.discovery import build, Resource
 from google_auth_oauthlib.flow import InstalledAppFlow
 from google.auth.transport.requests import Request
@@ -132,16 +132,12 @@ class GDrive:
         target_folder_id: str, 
         share_emails: Optional[List[str]] = None,
         convert_to_gsheet: bool = True
-    ) -> Optional[str]:
-        """Main interface to upload a list of files to Drive."""
+    ) -> Dict[str, str]:
+        """Main interface to upload a list of files to Drive. Returns {filename: link}."""
         service = cls._get_service(token_path)
-        if not service: return None
-        try:
-            f_meta = service.files().get(fileId=target_folder_id, fields='name').execute()
-            logger.debug(f"[GDrive] Target folder: {f_meta.get('name')} ({target_folder_id})")
-        except: pass
-
-        last_link = None
+        if not service: return {}
+        
+        success_links = {}
         list_emails = [e.strip() for e in share_emails if e.strip()] if share_emails else []
 
         for f_path in file_paths:
@@ -153,20 +149,16 @@ class GDrive:
             fname = os.path.basename(full_path)
             drive_name = fname.replace('.xlsx', '') if fname.endswith('.xlsx') and convert_to_gsheet else fname
             
-            logger.debug(f"[GDrive] Processing file: {fname}")
-            
             # Execute SYNC FILE
             file_id = cls.sync_file(service, full_path, drive_name, target_folder_id, convert_to_gsheet)
         
             if file_id:
-                # Handle returned link
                 new_link = f"https://docs.google.com/spreadsheets/d/{file_id}" if convert_to_gsheet else f"https://drive.google.com/file/d/{file_id}/view"
                 
                 # Configure permissions
                 try:
                     if not list_emails:
                         service.permissions().create(fileId=file_id, body={'type': 'anyone', 'role': 'reader'}).execute()
-                        logger.debug(f"[GDrive] Granted PUBLIC VIEW permission for: {fname}")
                     else:
                         for email in list_emails:
                             service.permissions().create(
@@ -174,13 +166,12 @@ class GDrive:
                                 body={'type': 'user', 'role': 'writer', 'emailAddress': email},
                                 sendNotificationEmail=False
                             ).execute()
-                        logger.debug(f"[GDrive] Granted EDITOR permission for: {list_emails}")
                 except Exception as e:
                     logger.warning(f"[GDrive] Permission configuration error: {e}")
                 
                 logger.info(f"[GDrive] Successfully uploaded: {fname}")
-                last_link = new_link
+                success_links[fname] = new_link
             else:
                 logger.error(f"[GDrive] Failed to upload: {fname}")
 
-        return last_link
+        return success_links
