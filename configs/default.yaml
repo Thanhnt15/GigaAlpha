@@ -33,9 +33,6 @@ upload:
   target_folder_id: ""
   cores: 10
 
-deploy:
-  enabled: false
-  branch: "gh-pages"
 
 log_link:
   sheet_path: "logs/drive_links.json"

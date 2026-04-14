@@ -154,38 +154,4 @@ class ScanPipeline:
                     
             logger.info("Uploading completed.\n")
 
-    def run_deploy_to_github(self):
-        """Phase 3: Deploy HTML reports to GitHub Pages."""
-        if self.config.deploy.enabled:
-            logger.info("Deploying reports to GitHub Pages...")
-            target_dir = Path(self.config.visualize.output_dir)
-            if not target_dir.exists():
-                logger.warning(f"Visualization directory not found: {target_dir}")
-                return
-
-            html_files = []
-            for segment in self.results_df['segment'].unique():
-                fpath = target_dir / f"3D_{self.config.backtest.alpha_name}_{self.config.backtest.gen_name}_{segment}.html"
-                if fpath.exists():
-                    html_files.append(fpath)
-
-            if not html_files:
-                logger.info("No newly generated HTML files found to deploy.")
-                return
-
-            from gigaalpha.services.deployment_service import DeploymentService
-            deployer = DeploymentService(branch=self.config.deploy.branch)
-            new_urls = deployer.deploy_reports(
-                html_files=html_files,
-                alpha_name=self.config.backtest.alpha_name,
-                gen_name=self.config.backtest.gen_name
-            )
-
-            if new_urls:
-                from gigaalpha.utils.track_link import update_html_link_txt
-                html_txt_path = Path("logs/html_link.txt")
-                update_html_link_txt(str(html_txt_path), new_urls)
-
-            logger.info("Deployment to GitHub Pages completed.\n")
-
     

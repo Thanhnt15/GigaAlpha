@@ -40,9 +40,6 @@ upload:
   enabled: true
   target_folder_id: "117gtokgAHiGDRF4c-6vmiXz75i_M1XQu"
   
-deploy:
-  enabled: true
-  branch: "gh-pages"
 
 log_link:
   sheet_path: "logs/drive_links.json"

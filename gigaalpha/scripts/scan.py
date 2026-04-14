@@ -37,6 +37,3 @@ if __name__ == '__main__':
         
     if pipeline_config.upload.enabled:
         pipeline.run_upload_to_drive()
-
-    if pipeline_config.deploy.enabled:
-        pipeline.run_deploy_to_github()

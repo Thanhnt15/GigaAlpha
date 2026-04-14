@@ -2,6 +2,7 @@ data:
   path: "data/dic_freqs_alpha_base.pkl"
   segments:
     - ["2022_01_01", "2026_01_01"]
+   
 backtest:
   alpha_name: "001"
   gen_name: "1_1"
@@ -27,9 +28,6 @@ upload:
   enabled: true
   target_folder_id: "117gtokgAHiGDRF4c-6vmiXz75i_M1XQu"
   
-deploy:
-  enabled: true
-  branch: "gh-pages"
 
 log_link:
   sheet_path: "logs/drive_links.json"

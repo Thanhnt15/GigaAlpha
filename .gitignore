@@ -39,18 +39,13 @@ data/*.csv
 logs/*.log
 logs/*.json
 logs/*.txt
-outputs/
-
-# Keep directory structure
-!**/.gitkeep
-
 # Outputs (Generated reports and charts)
-outputs/**/*
+outputs/**
 !outputs/**/
 !outputs/**/.gitkeep
-!outputs/html/*.html
-# Always ignore Excel files regardless of folder
+# Always ignore artifact files regardless of folder
 *.xlsx
+*.html
 
 # IDEs
 .vscode/
