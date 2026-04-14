@@ -1,72 +1,68 @@
 # 🚀 GigaAlpha Workflow Architecture
 
-Tài liệu này mô tả chi tiết luồng hoạt động của dự án GigaAlpha, từ lúc khởi chạy cấu hình cho đến khi báo cáo được đẩy lên Google Drive.
+This document describes the detailed execution flow of the GigaAlpha project, from configuration initialization to report synchronization with Google Drive.
 
-## 📌 Tổng quan luồng xử lý (Workflow Pipeline)
+## 📌 Workflow Pipeline Overview
 
-Quy trình hoạt động được điều phối chính bởi tệp `scan.py`. Một chu kỳ chạy bao gồm 3 Giai đoạn (Phases) chính:
+The execution process is primarily orchestrated by the `ScanPipeline` class (found in `pipeline_service.py`). A full cycle consists of 3 major Phases:
 
 ```mermaid
 graph TD
-    A[Bắt đầu: scan.py] --> B[Phase 1: Backtest & Statistics]
+    A[Start: scan.py] --> B[Phase 1: Backtest & Statistics]
     B --> C[Phase 2: Visualization & Storage]
-    C --> D[Phase 3: Cloud Publishing - Upload]
-    D --> E[Kết thúc: drive_links.json]
+    C --> D[Phase 3: Cloud Sync - Google Drive]
+    D --> E[End: drive_links.json]
 ```
 
 ---
 
-## 🛠 Chi tiết các Giai đoạn
+## 🛠 Phase Details
 
 ### 1. Phase 1: Backtest & Analytics (`run_backtest_and_statistics`)
-Đây là giai đoạn nặng nhất về tính toán, sử dụng đa nhân (multiprocessing) để quét các Alpha.
+This is the most computationally intensive phase, utilizing multiprocessing to scan Alpha strategies.
 
-- **Dịch vụ sử dụng**: `BacktestService`, `ScoringService`, `StatisticsService`.
-- **Luồng đi**:
-    1. **Load Config**: Đọc `default.yaml` để lấy danh sách alpha, frequency, segments.
-    2. **Generate Params**: `ScanParams.gen_all_params` tạo ra hàng nghìn tổ hợp tham số từ Registry.
-    3. **Simulation**: `BacktestService` gọi `Simulator` (Core) để chạy backtest song song.
-       - Mỗi Alpha được tính toán: `Signal` -> `Position` -> `TVR/Fee` -> `Profits`.
-    4. **Scoring**: `ScoringService` tính toán điểm Sharpe và các độ đo hiệu quả.
-    5. **Stats Summary**: In bảng tổng hợp kết quả (Sharpe > 0, 1, 2, TVR mean) ra Terminal.
+- **Services Used**: `BacktestService`, `ScoringService`, `StatisticsService`.
+- **Workflow**:
+    1. **Load Config**: Reads the YAML configuration (e.g., `scan_large.yaml`) to retrieve the list of alphas, frequencies, and segments.
+    2. **Generate Params**: `ScanParams.gen_all_params` creates thousands of parameter combinations from the registry.
+    3. **Simulation**: `BacktestService` runs parallel backtests across CPU cores.
+    4. **Scoring**: `ScoringService` computes Sharpe scores and performance rankings (Neighbor-based scoring).
+    5. **Stats Summary**: Prints a summary table (Sharpe > 0, 1, 2, mean TVR) to the terminal.
 
 ### 2. Phase 2: Reporting (`run_visualization_and_storage`)
-Giai đoạn này chuyển đổi dữ liệu thô thành các báo cáo trực quan.
+This phase transforms raw computation data into interactive visualizations and structured reports.
 
-- **Dịch vụ sử dụng**: `VisualizationService`, `StorageService`.
-- **Luồng đi**:
-    1. **Parallel Workers**: Chia dữ liệu theo từng `segment` để xử lý song song.
-    2. **Visual**: `VisualizationService` tạo biểu đồ 3D tương tác (HTML).
-    3. **Excel**: `StorageService` xuất dữ liệu chi tiết ra file `.xlsx` với format chuyên nghiệp.
-    4. **Output**: Lưu vào thư mục `outputs/excel/Gen_X/` và `outputs/html/Gen_X/`.
+- **Services Used**: `VisualizationService`, `StorageService`.
+- **Workflow**:
+    1. **Parallel Workers**: Splits data by `segment` for parallel processing.
+    2. **Visual**: `VisualizationService` generates interactive 3D charts (.html) saved in `outputs/html/`.
+    3. **Excel**: `StorageService` exports detailed metrics to professional `.xlsx` files in `outputs/excel/`.
 
-### 3. Phase 3: Cloud Publishing (`run_upload_to_drive`)
-Giai đoạn tự động hóa việc đưa kết quả lên Cloud.
+### 3. Phase 3: Cloud Sync (`run_upload_to_drive`)
+Automates the distribution of results to Google Drive.
 
-- **Dịch vụ sử dụng**: `UploadService`, `LinkTracker`.
-- **Luồng đi**:
-    1. **Scanning**: Tìm tất cả file Excel vừa tạo trong thư mục output.
-    2. **Parallel Upload**: `UploadService` gọi `GDrive` helper để đẩy file lên thư mục Google Drive định sẵn.
-    3. **Permissions**: Tự động mở quyền Public View hoặc cấp quyền Editor theo cấu hình.
-    4. **Tracking**: `LinkTracker` thu thập các đường dẫn (URL) Google Sheet và ghi vào `outputs/excel/drive_links.json`.
+- **Services Used**: `UploadService`, `LinkTracker`.
+- **Workflow**:
+    1. **Scanning**: Identifies all newly created Excel files in the output directory.
+    2. **Parallel Upload**: `UploadService` pushes files to Google Drive using the `GDrive` helper.
+    3. **Tracking**: `LinkTracker` records the generated URLs in `logs/drive_links.json`.
 
 ---
 
-## 📂 Sơ đồ gọi hàm (Call Stack Reference)
+## 📂 Call Stack Reference
 
-| Entry Point | Core / Service Called | Mục đích |
+| Entry Point | Core / Service Called | Purpose |
 | :--- | :--- | :--- |
-| `scan.py` | `PipelineConfig.load()` | Đọc và chuẩn hóa cấu hình từ YAML |
-| `BacktestWorkflow` | `BacktestService.run_parallel()` | Kích hoạt quét đa nhân |
-| `BacktestService` | `Simulator.execute_pipeline()` | Logic tính toán Backtest lõi |
-| `Simulator` | `AlphaDomains` | Thư viện toán học tính toán PnL, TVR |
-| `BacktestWorkflow` | `ScoringService.run_parallel()` | Chạy thuật toán chấm điểm Alpha |
-| `run_upload_to_drive` | `UploadService` | Giao tiếp với Google Drive API |
-| `LinkTracker` | `System.get_now_vn()` | Lấy thời gian chuẩn Việt Nam để log |
+| `scan.py` | `PipelineConfig.load()` | Load and normalize YAML configuration |
+| `ScanPipeline` | `BacktestService.run_parallel()` | Activate multi-core scan |
+| `BacktestService` | `Simulator.execute_pipeline()` | Core backtest mathematical logic |
+| `ScanPipeline` | `ScoringService.run_parallel()` | Run Alpha scoring algorithms |
+| `ScanPipeline` | `run_upload_to_drive()` | Interface with Google Drive API |
+| `LinkTracker` | `System.get_now_vn()` | Retrieve timestamp for link logging |
 
 ---
 
-## 💾 Quản lý dữ liệu (Data IO)
-- **Input**: Nhận file `.pickle` (ví dụ: `data/dic_range_bar.pickle`) chứa dữ liệu giá OHLC.
-- **Config**: Tất cả hành vi nằm trong `configs/default.yaml`.
-- **Logs**: Mọi hoạt động được ghi vào `logs/backtest.log` để debug.
+## 💾 Data Management (Data IO)
+- **Input**: Accepts `.pickle` files (e.g., `data/dic_freqs_alpha_base.pkl`) containing price data.
+- **Config**: Flexible behavioral definitions via YAML files in the `configs/` directory.
+- **Artifacts**: Generated HTML and Excel files reside in `outputs/` (managed via `.gitignore`).

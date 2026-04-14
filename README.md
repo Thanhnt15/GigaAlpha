@@ -10,7 +10,7 @@ GigaAlpha is a research framework for rapid strategy exploration and quantitativ
 - a multi-core parallel execution pipeline
 - an automated evaluation and scoring service
 - interactive 3D visualization artifacts
-- direct cloud synchronization for analytics reports (Google Drive, GitHub Pages)
+- direct cloud synchronization for analytics reports (Google Drive)
 - [Cloud Synchronization Guide](docs/CLOUD_SYNC_GUIDE.md)
 - a modular service-oriented architecture (SOA)
 
@@ -20,7 +20,7 @@ Current implementation highlights:
 
 - Python 3.8+ native compatibility
 - Parallelized core backtest orchestration over extensive parameter arrays
-- Fully decoupled visualization, storage, and deployment services
+- Fully decoupled visualization, storage, and synchronization services
 - [Detailed Cloud Setup Guide](docs/CLOUD_SYNC_GUIDE.md)
 
 ## Documentation Map
@@ -41,19 +41,17 @@ flowchart TD
     F --> G["VisualizationService (HTML)"]
     F --> H["StorageService (Excel)"]
     
-    G --> I["DeploymentService (GitHub Pages)"]
     H --> J["UploadService (Google Drive)"]
     
-    I --> K["Link Tracker (Logs)"]
-    J --> K
+    J --> K["Link Tracker (Logs)"]
 ```
 
-Two independent artifact persistence lanes share the computation results:
+The system generates two types of artifacts:
 
-| Lane | Purpose | Canonical Destination | Typical use |
+| Artifact Type | Purpose | Canonical Destination | Typical use |
 | --- | --- | --- | --- |
-| Storage Lane | Time-series metrics and log retention | Google Drive (`.xlsx`) | Archival, programmatic retrieval, deep-dive tabular evaluation |
-| Visualization Lane | Rapid visual surface investigation | GitHub Pages (`.html`) | Plotly 3D hyperparameter tuning and non-parametric observation |
+| Storage (.xlsx) | Time-series metrics and log retention | Google Drive | Archival, programmatic retrieval, deep-dive tabular evaluation |
+| Visualization (.html) | Rapid visual surface investigation | Local `outputs/html/` | Plotly 3D hyperparameter tuning and non-parametric observation |
 
 ## Core Concepts
 
@@ -64,7 +62,7 @@ Leverages `multiprocessing` to distribute discrete strategy parameter branches a
 Atomic services orchestrate functional logic (e.g., `backtest_service.py`, `scoring_service.py`, `upload_service.py`). These state-agnostic services decouple execution phases from core data bindings.
 
 ### 3. Automated Cloud Synchronization
-Integrated persistence handlers autonomously deploy structural artifacts to pre-configured endpoints, ensuring research environments persist correctly without manual operational intervention.
+The integrated `UploadService` autonomously synchronizes structural artifacts (Excel) to Google Drive, ensuring research environments persist correctly without manual operational intervention.
 
 ## Canonical Runtime Flow
 
@@ -77,7 +75,7 @@ flowchart LR
     E --> F["Cloud Synchonization Stage"]
 
     E -.-> V["Outputs: HTML & Excel"]
-    F -.-> Ep["Endpoints: GDrive & GH Pages"]
+    F -.-> Ep["Endpoint: Google Drive"]
 ```
 
 ## Setup
@@ -129,18 +127,18 @@ Top-level structured sections:
 - `data`: Path to source derivatives (`pickle` format optimally).
 - `backtest`: Generator targets and concurrency constraints.
 - `compute_score`: Sub-module thresholds for neighbor-based rankings.
-- `deploy`: Target definitions for remote repositories.
+- `storage/visualize`: Enable/Disable local artifact generation.
+- `upload`: Target definitions for Google Drive synchronization.
 
 Important infrastructural properties:
 - `backtest.cores`: Bound concurrency scale vertically relative to CPU topology.
-- `deploy.branch`: Default constraint points to standard `gh-pages` convention.
 
 ## Project Layout
 
 ```text
 gigaalpha/
 ├── core/            Fundamental engine logic and search limits definition
-├── helpers/         Third-party integrators (Git protocols, Google Auth endpoints)
+├── helpers/         Third-party integrators (Google Auth endpoints)
 ├── scripts/         CLI entry points
 ├── services/        Domain orchestrators (Execution, Sync, Plotting)
 ├── utils/           Side-effect free functional utilities and formatting constants
