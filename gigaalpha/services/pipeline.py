@@ -116,40 +116,76 @@ class ScanPipeline:
             logger.info("Visualization and storage completed.\n")
 
     def run_upload_to_drive(self):
+        """Phase 2.5: Upload Excel reports to Google Drive in parallel."""
         if self.config.upload.enabled:
             logger.info("Uploading reports to Google Drive in parallel...")
             target_dir = Path(self.config.storage.output_dir)
             if not target_dir.exists():
                 logger.warning(f"Upload directory not found: {target_dir}")
                 return
-                
+            
             excel_files = []
             for segment in self.results_df['segment'].unique():
                 fpath = target_dir / f"alpha_{self.config.backtest.alpha_name}_{self.config.backtest.gen_name}_{segment}.xlsx"
                 if fpath.exists():
-                    excel_files.append(fpath)
-                    
-            if not excel_files:
-                logger.info("No newly generated files found to upload.")
-                return
-                
-            tasks = [(f, self.config) for f in excel_files]
+                    excel_files.append(str(fpath))
 
-            num_cores = self.config.upload.cores
-            with mp.Pool(processes=min(len(tasks), num_cores)) as pool:
+            if not excel_files:
+                logger.info("No newly generated Excel files found to upload.")
+                return
+
+            tasks = [(f, self.config) for f in excel_files]
+            
+            # Use Pool for parallel uploads
+            num_cores = min(len(tasks), self.config.upload.cores)
+            with mp.Pool(processes=num_cores) as pool:
                 results = pool.map(_upload_worker, tasks)
             
+            # Collect successful links
+            new_urls = {}
+            for fname, link_dict in results:
+                if fname and link_dict:
+                    new_urls.update(link_dict)
             
-            seg_strs = [f"{s[0]}_{s[1]}" for s in self.config.data.segments]
-            def get_order(name):
-                return next((i for i, s in enumerate(seg_strs) if s in str(name)), 999)
-            new_links = {n: l for n, l in sorted(results, key=lambda x: get_order(x[0])) if n and l}
-        
-            if new_links:
-                from gigaalpha.utils.track_link import LinkTracker
+            if new_urls:
+                from gigaalpha.utils.track_link import update_drive_link_json
                 json_path = Path(self.config.log_link.sheet_path)
-                LinkTracker.update_drive_json(str(json_path), new_links)
+                update_drive_link_json(str(json_path), new_urls)
                     
             logger.info("Uploading completed.\n")
+
+    def run_deploy_to_github(self):
+        """Phase 3: Deploy HTML reports to GitHub Pages."""
+        if self.config.deploy.enabled:
+            logger.info("Deploying reports to GitHub Pages...")
+            target_dir = Path(self.config.visualize.output_dir)
+            if not target_dir.exists():
+                logger.warning(f"Visualization directory not found: {target_dir}")
+                return
+
+            html_files = []
+            for segment in self.results_df['segment'].unique():
+                fpath = target_dir / f"3D_{self.config.backtest.alpha_name}_{self.config.backtest.gen_name}_{segment}.html"
+                if fpath.exists():
+                    html_files.append(fpath)
+
+            if not html_files:
+                logger.info("No newly generated HTML files found to deploy.")
+                return
+
+            from gigaalpha.services.deployment import DeploymentService
+            deployer = DeploymentService(branch=self.config.deploy.branch)
+            new_urls = deployer.deploy_reports(
+                html_files=html_files,
+                alpha_name=self.config.backtest.alpha_name,
+                gen_name=self.config.backtest.gen_name
+            )
+
+            if new_urls:
+                from gigaalpha.utils.track_link import update_html_link_txt
+                html_txt_path = Path("logs/html_link.txt")
+                update_html_link_txt(str(html_txt_path), new_urls)
+
+            logger.info("Deployment to GitHub Pages completed.\n")
 
     

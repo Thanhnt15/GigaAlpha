@@ -49,7 +49,6 @@ class StorageConfig:
 @dataclass
 class UploadConfig:
     enabled: bool = False
-    token_path: str = "token.pickle"
     target_folder_id: str = ""
     cores: int = 10
 
@@ -57,6 +56,11 @@ class UploadConfig:
 class LogLinkConfig:
     sheet_path: str = "logs/drive_links.json"
     
+@dataclass
+class DeployConfig:
+    enabled: bool = False
+    branch: str = "gh-pages"
+
 @dataclass
 class PipelineConfig:
     data: DataConfig = field(default_factory=DataConfig)
@@ -66,6 +70,7 @@ class PipelineConfig:
     storage: StorageConfig = field(default_factory=StorageConfig)
     upload: UploadConfig = field(default_factory=UploadConfig)
     log_link: LogLinkConfig = field(default_factory=LogLinkConfig)
+    deploy: DeployConfig = field(default_factory=DeployConfig)
 
     @staticmethod
     def _map(cls: Type, data: Dict) -> Any:
