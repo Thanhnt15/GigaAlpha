@@ -11,6 +11,7 @@ GigaAlpha is a research framework for rapid strategy exploration and quantitativ
 - an automated evaluation and scoring service
 - interactive 3D visualization artifacts
 - direct cloud synchronization for analytics reports (Google Drive, GitHub Pages)
+- [Cloud Synchronization Guide](docs/CLOUD_SYNC_GUIDE.md)
 - a modular service-oriented architecture (SOA)
 
 ## Repository Status
@@ -20,10 +21,11 @@ Current implementation highlights:
 - Python 3.8+ native compatibility
 - Parallelized core backtest orchestration over extensive parameter arrays
 - Fully decoupled visualization, storage, and deployment services
+- [Detailed Cloud Setup Guide](docs/CLOUD_SYNC_GUIDE.md)
 
 ## Documentation Map
 
-- [HTML Charts Deployment Guide](docs/HTML_CHARTS_DEPLOYMENT.md)
+- [Cloud Synchronization Guide](docs/CLOUD_SYNC_GUIDE.md)
 
 ## Architecture At A Glance
 
