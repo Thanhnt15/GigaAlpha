@@ -5,6 +5,9 @@ from pathlib import Path
 from dotenv import load_dotenv
 
 
+# Auto-load environment variables from .env
+load_dotenv()
+
 from gigaalpha.constants.trading import SEGMENTS
 
 logger = logging.getLogger(__name__)
@@ -57,6 +60,10 @@ class LogLinkConfig:
     sheet_path: str = "logs/drive_links.json"
     
 @dataclass
+class NotificationConfig:
+    enabled: bool = False
+
+@dataclass
 class PipelineConfig:
     data: DataConfig = field(default_factory=DataConfig)
     backtest: BacktestConfig = field(default_factory=BacktestConfig)
@@ -65,6 +72,7 @@ class PipelineConfig:
     storage: StorageConfig = field(default_factory=StorageConfig)
     upload: UploadConfig = field(default_factory=UploadConfig)
     log_link: LogLinkConfig = field(default_factory=LogLinkConfig)
+    notification: NotificationConfig = field(default_factory=NotificationConfig)
 
     @staticmethod
     def _map(cls: Type, data: Dict) -> Any:
@@ -81,7 +89,6 @@ class PipelineConfig:
     @classmethod
     def load(cls, config_path: str) -> 'PipelineConfig':
         """Load YAML and map to dataclasses hierarchy with environment variables support."""
-        load_dotenv()
         fp = Path(config_path)
         if not fp.exists():
             logger.error(f"Config not found: {fp}"); sys.exit(1)
