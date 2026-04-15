@@ -18,18 +18,11 @@ if __name__ == '__main__':
     parser.add_argument('--config', default='configs/default.yaml', help='Path to YAML config file (default: configs/default.yaml)')
     args = parser.parse_args()
 
-    # Determine config path
-    config_path = Path(args.config)
-    
-    # Check if absolute or relative to root
-    if not config_path.is_absolute():
-        config_path = PROJECT_ROOT / config_path
-
-    pipeline_config = PipelineConfig.load(str(config_path))
+    pipeline_config = PipelineConfig.load(str(args.config))
     
     from gigaalpha.helpers.timer import Timer
 
-    logger.info(f"Running Scan Pipeline with config: {config_path.name}")
+    logger.info(f"Running Scan Pipeline with config: {args.config}")
     pipeline = ScanPipeline(pipeline_config)
 
     with Timer("Total execution"):
