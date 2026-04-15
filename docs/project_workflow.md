@@ -1,68 +1,87 @@
-# 🚀 GigaAlpha Workflow Architecture
+# GigaAlpha Workflow Architecture
 
-This document describes the detailed execution flow of the GigaAlpha project, from configuration initialization to report synchronization with Google Drive.
+This document provides a technical specification of the GigaAlpha execution pipeline, outlining the sequence of operations from configuration initialization to cloud-based artifact synchronization.
 
-## 📌 Workflow Pipeline Overview
+## Workflow Pipeline Overview
 
-The execution process is primarily orchestrated by the `ScanPipeline` class (found in `pipeline_service.py`). A full cycle consists of 3 major Phases:
+The execution process is orchestrated by the ScanPipeline class (located in gigaalpha/services/pipeline_service.py). The pipeline is structured into several discrete, sequential stages to ensure modularity and robust error handling.
 
 ```mermaid
 graph TD
-    A[Start: scan.py] --> B[Phase 1: Backtest & Statistics]
-    B --> C[Phase 2: Visualization & Storage]
-    C --> D[Phase 3: Cloud Sync - Google Drive]
-    D --> E[End: drive_links.json]
+    A[Initialization: scan.py] --> B[Stage 1: Core Backtest]
+    B --> C[Stage 2: Scoring Computation]
+    C --> D[Stage 3: Statistics Aggregation]
+    D --> E[Stage 4: Visualization & Storage]
+    E --> F[Stage 5: Cloud Synchronization]
+    F --> G[End: drive_links.json]
 ```
 
 ---
 
-## 🛠 Phase Details
+## Operational Stages
 
-### 1. Phase 1: Backtest & Analytics (`run_backtest_and_statistics`)
-This is the most computationally intensive phase, utilizing multiprocessing to scan Alpha strategies.
+### 1. Core Backtesting (run_backtest)
+The primary computational stage involving high-concurrency parameter exploration.
 
-- **Services Used**: `BacktestService`, `ScoringService`, `StatisticsService`.
-- **Workflow**:
-    1. **Load Config**: Reads the YAML configuration (e.g., `scan_large.yaml`) to retrieve the list of alphas, frequencies, and segments.
-    2. **Generate Params**: `ScanParams.gen_all_params` creates thousands of parameter combinations from the registry.
-    3. **Simulation**: `BacktestService` runs parallel backtests across CPU cores.
-    4. **Scoring**: `ScoringService` computes Sharpe scores and performance rankings (Neighbor-based scoring).
-    5. **Stats Summary**: Prints a summary table (Sharpe > 0, 1, 2, mean TVR) to the terminal.
+- Services: BacktestService, Simulator.
+- Logic:
+    1. Configuration Loading: Parses YAML definitions to determine strategy targets.
+    2. Grid Generation: Expands parameter ranges into a discrete execution matrix.
+    3. Parallel Simulation: Distributes simulation tasks across multiple CPU cores using multiprocessing.
+    4. Diagnostics: Individual failures are caught at the simulator level, logging full tracebacks without terminating the broader grid.
 
-### 2. Phase 2: Reporting (`run_visualization_and_storage`)
-This phase transforms raw computation data into interactive visualizations and structured reports.
+### 2. Scoring Computation (run_scoring)
+An optional analytical stage that ranks strategy performance based on non-parametric models.
 
-- **Services Used**: `VisualizationService`, `StorageService`.
-- **Workflow**:
-    1. **Parallel Workers**: Splits data by `segment` for parallel processing.
-    2. **Visual**: `VisualizationService` generates interactive 3D charts (.html) saved in `outputs/html/`.
-    3. **Excel**: `StorageService` exports detailed metrics to professional `.xlsx` files in `outputs/excel/`.
+- Services: ScoringService.
+- Logic:
+    1. Result Loading: Retrieves the raw trading records generated in the Backtest stage.
+    2. K-Neighbors Evaluation: Computes neighborhood-based Sharpe rankings to filter robust strategy parameters.
+    3. Data Integration: Appends scoring metrics directly to the primary results DataFrame.
 
-### 3. Phase 3: Cloud Sync (`run_upload_to_drive`)
-Automates the distribution of results to Google Drive.
+### 3. Statistics Aggregation (run_statistics)
+The final numerical analysis stage for summarizing performance across different time segments.
 
-- **Services Used**: `UploadService`, `LinkTracker`.
-- **Workflow**:
-    1. **Scanning**: Identifies all newly created Excel files in the output directory.
-    2. **Parallel Upload**: `UploadService` pushes files to Google Drive using the `GDrive` helper.
-    3. **Tracking**: `LinkTracker` records the generated URLs in `logs/drive_links.json`.
+- Services: StatisticsService.
+- Logic:
+    1. Transformation: Groups results by time segments and strategy identifies.
+    2. Metric Calculation: Computes high-level statistics including Sharpe ratio distribution, TVR means, and success percentages.
+    3. Reporting: Outputs a structured terminal summary for immediate researcher feedback.
+
+### 4. Visualization and Storage (run_visualization_and_storage)
+The stage responsible for generating tangible research artifacts.
+
+- Services: VisualizationService, StorageService.
+- Logic:
+    1. Parallel Processing: Assigns segment-specific data to parallel workers for artifact generation.
+    2. 3D Plotting: VisualizationService creates interactive Plotly HTML files for hyperparameter investigation.
+    3. Archival: StorageService exports comprehensive metrics into professional-grade Excel workbooks.
+
+### 5. Cloud Synchronization (run_upload_to_drive)
+Ensures data persistence and collaborative access via automated cloud storage.
+
+- Services: UploadService, TrackLink Utility.
+- Logic:
+    1. Artifact Identification: Detects new Excel workbooks in the storage directory.
+    2. Parallel Upload: Uploads files to Google Drive using a dedicated OAuth2 service layer.
+    3. Link Management: Updates the centralized drive_links.json tracker with verifiable Cloud URLs.
 
 ---
 
-## 📂 Call Stack Reference
+## Call Stack Reference
 
-| Entry Point | Core / Service Called | Purpose |
+| Entry Point | Core / Service Context | Functional Purpose |
 | :--- | :--- | :--- |
-| `scan.py` | `PipelineConfig.load()` | Load and normalize YAML configuration |
-| `ScanPipeline` | `BacktestService.run_parallel()` | Activate multi-core scan |
-| `BacktestService` | `Simulator.execute_pipeline()` | Core backtest mathematical logic |
-| `ScanPipeline` | `ScoringService.run_parallel()` | Run Alpha scoring algorithms |
-| `ScanPipeline` | `run_upload_to_drive()` | Interface with Google Drive API |
-| `LinkTracker` | `System.get_now_vn()` | Retrieve timestamp for link logging |
+| scan.py | PipelineConfig.load() | Configuration normalization and I/O validation |
+| ScanPipeline | BacktestService.run_parallel() | Multiprocessing orchestration of backtest workers |
+| BacktestService | Simulator.execute_pipeline() | Execution of mathematical trading models |
+| ScanPipeline | ScoringService.run_parallel() | Algorithmic ranking and neighbor analysis |
+| ScanPipeline | run_upload_to_drive() | Interaction with Cloud Storage API layers |
+| TrackLink | System.vn_time_converter() | Metadata timestamp generation (GMT+7) |
 
 ---
 
-## 💾 Data Management (Data IO)
-- **Input**: Accepts `.pickle` files (e.g., `data/dic_freqs_alpha_base.pkl`) containing price data.
-- **Config**: Flexible behavioral definitions via YAML files in the `configs/` directory.
-- **Artifacts**: Generated HTML and Excel files reside in `outputs/` (managed via `.gitignore`).
+## Data Lifecycle Management
+- Input Processing: Standardized .pickle files for high-velocity data ingestion.
+- Adaptive Configuration: Behavioral definitions managed through segmented YAML profiles.
+- Artifact Archival: Structured output directory (outputs/) with automated logging and audit trails.

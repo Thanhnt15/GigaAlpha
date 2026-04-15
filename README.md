@@ -2,30 +2,7 @@
 
 **High-performance, service-oriented quantitative trading strategy backtesting engine with automated analytics and cloud synchronization**
 
-[![Python 3.8+](https://img.shields.io/badge/python-3.8%2B-blue.svg)](https://www.python.org/downloads/)
-[![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
-
-GigaAlpha is a research framework for rapid strategy exploration and quantitative analysis. It combines:
-
-- a multi-core parallel execution pipeline
-- an automated evaluation and scoring service
-- interactive 3D visualization artifacts
-- direct cloud synchronization for analytics reports (Google Drive)
-- [Cloud Synchronization Guide](docs/CLOUD_SYNC_GUIDE.md)
-- a modular service-oriented architecture (SOA)
-
-## Repository Status
-
-Current implementation highlights:
-
-- Python 3.8+ native compatibility
-- Parallelized core backtest orchestration over extensive parameter arrays
-- Fully decoupled visualization, storage, and synchronization services
-- [Detailed Cloud Setup Guide](docs/CLOUD_SYNC_GUIDE.md)
-
-## Documentation Map
-
-- [Cloud Synchronization Guide](docs/CLOUD_SYNC_GUIDE.md)
+GigaAlpha is a specialized research framework designed for rapid strategy exploration and rigorous quantitative analysis. It integrates multi-core parallel execution with automated evaluation services and cloud-based persistence.
 
 ## Architecture At A Glance
 
@@ -35,7 +12,7 @@ flowchart TD
     B --> C["ScanPipeline"]
     
     C --> D["BacktestService"]
-    D --> E["ScoringService"]
+    D --> E["ScoringService (Optional)"]
     E --> F["StatisticsService"]
     
     F --> G["VisualizationService (HTML)"]
@@ -46,108 +23,104 @@ flowchart TD
     J --> K["Link Tracker (Logs)"]
 ```
 
-The system generates two types of artifacts:
+The system generates two primary artifact types for different research workflows:
 
-| Artifact Type | Purpose | Canonical Destination | Typical use |
+| Artifact Type | Purpose | Canonical Destination | Typical Use Case |
 | --- | --- | --- | --- |
-| Storage (.xlsx) | Time-series metrics and log retention | Google Drive | Archival, programmatic retrieval, deep-dive tabular evaluation |
-| Visualization (.html) | Rapid visual surface investigation | Local `outputs/html/` | Plotly 3D hyperparameter tuning and non-parametric observation |
+| Storage (.xlsx) | Time-series metrics and log retention | Google Drive | Archival, deep-dive tabular evaluation, and sharing |
+| Visualization (.html) | High-dimensional surface investigation | Local outputs/html/ | Plotly 3D hyperparameter tuning and observation |
 
 ## Core Concepts
 
-### 1. Parallel Backtesting Pipeline
-Leverages `multiprocessing` to distribute discrete strategy parameter branches across CPU cores. It mitigates bottleneck constraints and reduces exhaustive parameter searches from hours to minutes.
+### 1. Granular Execution Pipeline
+The pipeline is decomposed into independent, atomic phases: Core Backtest, Scoring Computation, and Statistics Summary. Each phase is independently timed and logged, allowing for precise performance monitoring and easier debugging.
 
-### 2. Service-Oriented Architecture (SOA)
-Atomic services orchestrate functional logic (e.g., `backtest_service.py`, `scoring_service.py`, `upload_service.py`). These state-agnostic services decouple execution phases from core data bindings.
+### 2. Robust Error Handling and Diagnostics
+GigaAlpha implements advanced error trapping that captures full tracebacks and problematic configuration metadata at each step. If an individual backtest fails, the system logs the exact cause and continues processing the remaining grid without interruption.
 
-### 3. Automated Cloud Synchronization
-The integrated `UploadService` autonomously synchronizes structural artifacts (Excel) to Google Drive, ensuring research environments persist correctly without manual operational intervention.
+### 3. Service-Oriented Architecture (SOA)
+Functional logic is encapsulated in state-agnostic services (e.g., BacktestService, ScoringService). This decoupling allows the core engine to be highly flexible and easy to extend with new analytical layers.
 
-## Canonical Runtime Flow
+### 4. Portable Professional Helpers
+Centralized helpers like System and Timer are designed for maximum portability. Features such as the Vietnam Timezone (GMT+7) converter are standardized across the framework to ensure consistent diagnostic audit trails.
+
+## Functional Runtime Flow
 
 ```mermaid
 flowchart LR
     A["Initialize Config"] --> B["Generate Params Grid"]
-    B --> C["Parallel Backtest Stage"]
-    C --> D["Scoring & Evaluation Stage"]
-    D --> E["Artifact Generation Stage"]
-    E --> F["Cloud Synchonization Stage"]
+    B --> C["Backtest Stage"]
+    C --> D["Scoring Stage"]
+    D --> E["Statistics Stage"]
+    E --> F["Reporting Stage"]
 
-    E -.-> V["Outputs: HTML & Excel"]
-    F -.-> Ep["Endpoint: Google Drive"]
+    F -.-> V["Outputs: HTML & Excel"]
+    F -.-> G["Sync: Google Drive"]
 ```
 
 ## Setup
 
 ### Prerequisites
 
+Ensure you have a clean Python 3.8+ environment:
+
 ```bash
 git clone https://github.com/Thanhnt15/GigaAlpha.git
 cd GigaAlpha
-
 python3 -m pip install -r requirements.txt
 ```
 
-### Credentials & Keys
+### Authentication
 
-Replicate the environment schema to authenticate respective external services:
+Configure your environment settings:
 
 ```bash
 cp .env.example .env
 ```
 
-Ensure `GDRIVE_TOKEN_PATH` securely maps to your validated OAuth2 token (`.pickle` or `.json`), permitting the `UploadService` necessary file/folder scopes.
+Ensure GDRIVE_TOKEN_PATH correctly maps to your OAuth2 token file to enable automated cloud synchronization.
 
-## Quick Start
+## Usage
 
-### Execute the Scan Pipeline
-
-Launch the main parallel execution branch relying on the baseline profile:
+### Systematic Scan
+Launch the parallel execution pipeline using a YAML configuration:
 
 ```bash
 python gigaalpha/scripts/scan.py --config configs/default.yaml
 ```
 
-### Common Workflows
-
-#### Extensive Grid Validation
-Invoke the workflow on the exhaustive parameter boundaries layout:
+### Professional Debug Sandbox
+For rapid iteration without YAML overhead or persistent file logging:
 
 ```bash
-python gigaalpha/scripts/scan.py --config configs/scan_large.yaml
+python gigaalpha/scripts/debug_run.py
 ```
 
 ## Configuration Model
 
-The canonical pipeline configuration resides within `configs/default.yaml`.
+Pipeline behavior is defined in `configs/default.yaml` with the following structured sections:
 
-Top-level structured sections:
-
-- `data`: Path to source derivatives (`pickle` format optimally).
-- `backtest`: Generator targets and concurrency constraints.
-- `compute_score`: Sub-module thresholds for neighbor-based rankings.
-- `storage/visualize`: Enable/Disable local artifact generation.
-- `upload`: Target definitions for Google Drive synchronization.
-
-Important infrastructural properties:
-- `backtest.cores`: Bound concurrency scale vertically relative to CPU topology.
+- data: Source data paths and segment definitions.
+- backtest: Alpha/Generator selection and concurrency (cores) settings.
+- compute_score: K-Neighbors scoring thresholds.
+- storage/visualize: Local artifact generation toggles.
+- upload: Google Drive target folder definitions.
 
 ## Project Layout
 
 ```text
 gigaalpha/
-├── core/            Fundamental engine logic and search limits definition
-├── helpers/         Third-party integrators (Google Auth endpoints)
-├── scripts/         CLI entry points
-├── services/        Domain orchestrators (Execution, Sync, Plotting)
-├── utils/           Side-effect free functional utilities and formatting constants
+├── core/            Fundamental engine logic (Simulators, Registries)
+├── helpers/         Portable standalone utilities (System, Timer, Drive)
+├── scripts/         CLI entry points (scan.py, debug_run.py)
+├── services/        Domain orchestrators (Backtest, Scoring, Statistics, Sync)
+├── utils/           Functional utilities and configuration loaders
 configs/             YAML behavioral definitions
-docs/                Technical specifications
-outputs/             Ephemeral artifacts and metric manifestations (git ignored)
-logs/                Diagnostics arrays and HTTP sync records (git ignored)
+docs/                Technical specifications and guides
+outputs/             Generated manifests (HTML, XLSX)
+logs/                System diagnostics and Vietnam Time audit trails
 ```
 
 ## License
 
-MIT. See [`LICENSE`](LICENSE).
+MIT. See LICENSE for details.
