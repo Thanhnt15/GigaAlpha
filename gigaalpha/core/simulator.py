@@ -19,11 +19,11 @@ class Simulator:
             strategy_id.append(str(round(v, 4)) if isinstance(v, (float, int)) else str(v))
             
         self.report = {
-            'strategy':   "_".join(strategy_id),
-            'frequency':  frequency,
-            'fee':        fee,
             'alpha_name': alpha_name,
             'gen_name':   gen_name,
+            'fee':        fee,
+            'frequency':  frequency,
+            'strategy':   "_".join(strategy_id),
             **{f'alpha_{k}': v for k, v in alpha_params.items()},
             **{f'gen_{k}':   v for k, v in gen_params.items()},
         }

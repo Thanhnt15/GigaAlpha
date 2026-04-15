@@ -9,10 +9,12 @@ def setup_logging():
     log_dir.mkdir(exist_ok=True)
     
     if not logging.getLogger().handlers:
+        from gigaalpha.helpers.system import System
         logger = logging.getLogger()
         logger.setLevel(logging.DEBUG)
 
         log_fmt = logging.Formatter('%(asctime)s %(levelname)s [%(name)s] %(message)s', datefmt='%Y-%m-%d %H:%M:%S')
+        log_fmt.converter = System.vn_time_converter
 
         console_h = logging.StreamHandler(sys.stdout)
         console_h.setLevel(logging.INFO)

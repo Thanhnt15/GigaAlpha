@@ -32,5 +32,5 @@ def calc_sharpe_tvr_summary(
     for threshold in lst_sharpe_threshold:
         res[f'Sharpe > {threshold} (%)'] = get_pct(threshold)
         
-    res['TVR (mean)'] = round(df_seg[tvr_col].mean(), 4)
+    res['TVR (mean)'] = float(round(df_seg[tvr_col].mean(), 4))
     return res
