@@ -27,7 +27,7 @@ if __name__ == '__main__':
 
     pipeline_config = PipelineConfig.load(str(config_path))
     
-    from gigaalpha.utils.timer import Timer
+    from gigaalpha.helpers.timer import Timer
 
     logger.info(f"Running Scan Pipeline with config: {config_path.name}")
     pipeline = ScanPipeline(pipeline_config)
