@@ -1,11 +1,14 @@
-# Ignore all strategy files by default to protect proprietary logic
-alphas/*.py
-gens/*.py
+# Default: Ignore all Python files in strategies subfolders
+alphas/**/*.py
+gens/**/*.py
 
-# Allow package initialization
+# Always exclude cache
+**/__pycache__/
+
+# Whitelist: Essential files to maintain package structure
 !alphas/__init__.py
 !gens/__init__.py
 
-# Specifically allow sample files for demonstration
+# Whitelist: Demonstration samples
 !alphas/sample_alpha.py
 !gens/sample_gen.py
