@@ -13,7 +13,8 @@ graph TD
     C --> D[Stage 3: Statistics Aggregation]
     D --> E[Stage 4: Visualization & Storage]
     E --> F[Stage 5: Cloud Synchronization]
-    F --> G[End: drive_links.json]
+    F --> G[Stage 6: Monitoring & Alerts]
+    G --> H[End]
 ```
 
 ---
@@ -66,6 +67,14 @@ Ensures data persistence and collaborative access via automated cloud storage.
     2. Parallel Upload: Uploads files to Google Drive using a dedicated OAuth2 service layer.
     3. Link Management: Updates the centralized drive_links.json tracker with verifiable Cloud URLs.
 
+### 6. Monitoring & Alerts
+The notification layer providing real-time updates on pipeline status and system health.
+
+- Services: Telegram Integration.
+- Logic:
+    1. Status Reporting: Sends comprehensive summaries upon successful completion of the research pipeline.
+    2. Diagnostic Alerts: Automatically captures and delivers system warnings and errors for rapid troubleshooting.
+
 ---
 
 ## Call Stack Reference
@@ -78,6 +87,8 @@ Ensures data persistence and collaborative access via automated cloud storage.
 | ScanPipeline | ScoringService.run_parallel() | Algorithmic ranking and neighbor analysis |
 | ScanPipeline | run_upload_to_drive() | Interaction with Cloud Storage API layers |
 | TrackLink | System.vn_time_converter() | Metadata timestamp generation (GMT+7) |
+| TelegramHandler | _should_throttle() | Cross-process coordination (fcntl lock) |
+| ScanPipeline | notify_success() | Pipeline-level health and metric reporting |
 
 ---
 

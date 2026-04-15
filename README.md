@@ -29,6 +29,7 @@ flowchart TD
     H --> J["UploadService (Google Drive)"]
     
     J --> K["Link Tracker (Logs)"]
+    C -.-> L["Telegram Alerts (Status/Errors)"]
 ```
 
 The system generates two primary artifact types for different research workflows:
@@ -38,19 +39,24 @@ The system generates two primary artifact types for different research workflows
 | Storage (.xlsx) | Time-series metrics and log retention | Google Drive | Archival, deep-dive tabular evaluation, and sharing |
 | Visualization (.html) | High-dimensional surface investigation | Local outputs/html/ | Plotly 3D hyperparameter tuning and observation |
 
-## Core Concepts
+## Monitoring & Alerts
 
-### 1. Granular Execution Pipeline
-The pipeline is decomposed into independent, atomic phases: Core Backtest, Scoring Computation, and Statistics Summary. Each phase is independently timed and logged, allowing for precise performance monitoring and easier debugging.
+GigaAlpha incorporates a centralized notification system to keep you updated on the pipeline's progress and health.
 
-### 2. Robust Error Handling and Diagnostics
-GigaAlpha implements advanced error trapping that captures full tracebacks and problematic configuration metadata at each step. If an individual backtest fails, the system logs the exact cause and continues processing the remaining grid without interruption.
+-   **Real-time Notifications**: Receive instant updates via Telegram for both successful completions and system warnings/errors.
+-   **Unattended Operation**: Designed for stable, long-running research tasks with automated diagnostic reporting.
 
-### 3. Service-Oriented Architecture (SOA)
-Functional logic is encapsulated in state-agnostic services (e.g., BacktestService, ScoringService). This decoupling allows the core engine to be highly flexible and easy to extend with new analytical layers.
+> [!TIP]
+> See the [Telegram Setup Guide](docs/telegram_setup.md) for quick integration steps.
 
-### 4. Portable Professional Helpers
-Centralized helpers like System and Timer are designed for maximum portability. Features such as the Vietnam Timezone (GMT+7) converter are standardized across the framework to ensure consistent diagnostic audit trails.
+## Advanced Data Lifecycle Management
+
+The system generates two primary artifact types for different research workflows:
+
+| Artifact Type | Purpose | Canonical Destination | Typical Use Case |
+| :--- | :--- | :--- | :--- |
+| **Storage (.xlsx)** | Metric retention & detailed logs | Google Drive / Local | Deep-dive tabular evaluation & archival |
+| **Visualization (.html)** | High-dimensional surface investigation | Local `outputs/html/` | Plotly 3D hyperparameter tuning |
 
 ## Functional Runtime Flow
 
@@ -64,13 +70,14 @@ flowchart LR
 
     F -.-> V["Outputs: HTML & Excel"]
     F -.-> G["Sync: Google Drive"]
+    C -.-> T["Alerts: Telegram"]
+    F -.-> T
 ```
 
-## Setup
+## Getting Started
 
-### Prerequisites
-
-Ensure you have a clean Python 3.8+ environment:
+### 1. Prerequisites
+Ensure you have a clean **Python 3.8+** environment. It is recommended to use a virtual environment or a dedicated Conda environment.
 
 ```bash
 git clone https://github.com/Thanhnt15/GigaAlpha.git
@@ -78,41 +85,38 @@ cd GigaAlpha
 python3 -m pip install -r requirements.txt
 ```
 
-### Authentication
-
-Configure your environment settings:
+### 2. Environment Configuration
+GigaAlpha utilize a centralized configuration strategy via a `.env` file. Initialize yours by cloning the example:
 
 ```bash
 cp .env.example .env
 ```
 
-Ensure GDRIVE_TOKEN_PATH correctly maps to your OAuth2 token file to enable automated cloud synchronization.
+### 3. Authentication & Integration
+- **Google Drive**: Ensure `GDRIVE_TOKEN_PATH` in `.env` points to your validated OAuth2 credentials.
+- **Telegram Monitoring**: Follow the [Telegram Setup Guide](docs/telegram_setup.md) to enable real-time alerting.
 
-## Usage
+## Workflow Execution
 
-### Systematic Scan
-Launch the parallel execution pipeline using a YAML configuration:
-
+### Systematic Scan Pipeline
+The production-grade entry point for large-scale grid searches:
 ```bash
 python gigaalpha/scripts/scan.py --config configs/default.yaml
 ```
 
-### Professional Debug Sandbox
-For rapid iteration without YAML overhead or persistent file logging:
-
+### Research Sandbox
+A lightweight entry point for rapid Alpha iteration without YAML overhead:
 ```bash
 python gigaalpha/scripts/debug_run.py
 ```
 
 ## Configuration Model
 
-Pipeline behavior is defined in `configs/default.yaml` with the following structured sections:
-
-- data: Source data paths and segment definitions.
-- backtest: Alpha/Generator selection and concurrency (cores) settings.
-- compute_score: K-Neighbors scoring thresholds.
-- storage/visualize: Local artifact generation toggles.
-- upload: Google Drive target folder definitions.
+Pipeline behavior is governed by structured YAML profiles in `configs/`:
+- **data**: Data ingestion paths and time-series segments.
+- **backtest**: Alpha definitions and concurrency (`cores`) throttling.
+- **compute_score**: K-Neighbors performance thresholds.
+- **upload**: Cloud target destination and metadata settings.
 
 ## Project Layout
 
@@ -126,8 +130,10 @@ gigaalpha/
 configs/             YAML behavioral definitions
 docs/                Technical specifications and guides
 outputs/             Generated manifests (HTML, XLSX)
-logs/                System diagnostics and Vietnam Time audit trails
+logs/                System diagnostics and sentinel files
 ```
+
+For a deep dive into the internal execution logic, see the [Project Workflow Document](docs/project_workflow.md).
 
 ## License
 
