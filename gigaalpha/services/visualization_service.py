@@ -10,5 +10,9 @@ class VisualizationService:
         self.df = df
 
     def run_visualization(self, title: str, target_cols: List[str], colors: List[str], output_path: str):
-        plot_sharpe_surface(df=self.df, title=title, target_cols=target_cols, colors=colors, output_path=output_path)
+        try:
+            logger.info(f"Generating 3D surface chart: {output_path}")
+            plot_sharpe_surface(df=self.df, title=title, target_cols=target_cols, colors=colors, output_path=output_path)
+        except Exception:
+            logger.exception(f"Failed to generate visualization: {output_path}")
         

@@ -1,4 +1,7 @@
+import logging
 from gigaalpha.helpers.drive import GDrive
+
+logger = logging.getLogger(__name__)
 
 class UploadService:
     def __init__(self, local_path: str, token_path: str, target_folder_id: str):
@@ -9,8 +12,13 @@ class UploadService:
 
     def upload_to_drive(self):
         """Thực hiện upload một file đơn lẻ lên Google Drive."""
-        return GDrive.upload_files(
-            token_path=self.token_path,
-            file_paths=[self.local_path],
-            target_folder_id=self.target_folder_id,
-        )
+        try:
+            logger.info(f"Uploading file to Drive: {self.local_path}")
+            return GDrive.upload_files(
+                token_path=self.token_path,
+                file_paths=[self.local_path],
+                target_folder_id=self.target_folder_id,
+            )
+        except Exception:
+            logger.exception(f"Failed to upload file to Drive: {self.local_path}")
+            return None

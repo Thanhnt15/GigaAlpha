@@ -10,6 +10,7 @@ from gigaalpha.services.visualization_service import VisualizationService
 from gigaalpha.services.storage_service import StorageService
 from gigaalpha.core.scanner import ScanParams
 from gigaalpha.utils.config import PipelineConfig
+from gigaalpha.helpers.timer import Timer
 
 PROJECT_ROOT = Path(__file__).parents[2]
 logger = logging.getLogger(__name__)
@@ -25,7 +26,6 @@ def _visualize_and_storage_worker(task):
             y = sorted([col for col in seg_df.columns if 'gen_' in col and col != 'gen_name'])[0]
 
             target_cols = [z, x, y]
-            # Use absolute path relative to PROJECT_ROOT
             output_dir = PROJECT_ROOT / config.visualize.output_dir
             output_path_html = output_dir / f"3D_{config.backtest.alpha_name}_{config.backtest.gen_name}_{segment}.html"
             visualizer.run_visualization(
@@ -35,15 +35,13 @@ def _visualize_and_storage_worker(task):
                 output_path=output_path_html
             )
         if config.storage.enabled:
-            # Use absolute path relative to PROJECT_ROOT
             output_dir = PROJECT_ROOT / config.storage.output_dir
             output_path_excel = output_dir / f"alpha_{config.backtest.alpha_name}_{config.backtest.gen_name}_{segment}.xlsx"
             storage = StorageService(df=seg_df, output_path=output_path_excel)
             storage.save_to_xlsx()
 
-    except Exception as e:
-        import traceback
-        logger.error(f"Visualization/Storage failed for segment {segment}:\n{traceback.format_exc()}")
+    except Exception:
+        logger.exception(f"Visualization/Storage failed for segment {segment}")
         return None
 
 def _upload_worker(task):
@@ -59,9 +57,8 @@ def _upload_worker(task):
             )
             link = uploader.upload_to_drive()
             return (Path(local_path).name, link)
-    except Exception as e:
-        import traceback
-        logger.error(f"Upload failed for {local_path}:\n{traceback.format_exc()}")
+    except Exception:
+        logger.exception(f"Upload failed for {local_path}")
     return (None, None)
 
 class ScanPipeline:
@@ -69,9 +66,10 @@ class ScanPipeline:
         self.config = config
         self.results_df = pd.DataFrame()
 
+    @Timer("Core Backtest")
     def run_backtest(self):
         """Generate configurations and run the core backtesting simulator in parallel."""
-        logger.info(f"--- CORE BACKTEST ---")
+        logger.info(f"Core backtest")
         backtester = BacktestService(dic_data=pd.read_pickle(PROJECT_ROOT / self.config.data.path), segments=self.config.data.segments)
         lst_configs = ScanParams.gen_all_params(
             alpha_name = self.config.backtest.alpha_name,
@@ -86,16 +84,17 @@ class ScanPipeline:
         self.results_df = pd.DataFrame(backtester.run_parallel(lst_configs, cores=self.config.backtest.cores))
         
         if self.results_df.empty:
-            logger.error("No results generated.")
-            return
-        logger.info("Backtest completed successfully.\n")
+            msg = "No backtest results generated. Stopping pipeline."
+            logger.error(msg)
+            raise RuntimeError(msg)
 
+    @Timer("Scoring Computation")
     def run_scoring(self):
         """Calculate K-Neighbors Sharpe scores (if enabled)."""
         if self.results_df.empty or not self.config.compute_score.enabled:
             return
             
-        logger.info(f"--- COMPUTE SCORING ---")
+        logger.info(f"Compute scoring")
         logger.info("Computing K-Neighbors Sharpe score in parallel...")
         
         score_results = []
@@ -107,19 +106,17 @@ class ScanPipeline:
             
         if score_results:
             self.results_df = pd.concat(score_results, ignore_index=True)
-            
-        logger.info("Scoring completed.\n")
 
+    @Timer("Statistics Summary")
     def run_statistics(self):
         """Aggregate performance statistics."""
         if self.results_df.empty:
             return
         
-        logger.info(f"--- STATISTICS SUMMARY ---")
+        logger.info(f"Statistics summary")
         logger.info("Computing basic statistics...")
             
         stats_results = []
-        
         for segment in self.results_df['segment'].unique():
             seg_df = self.results_df[self.results_df['segment'] == segment]
             stats_service = StatisticsService(df=seg_df)
@@ -127,8 +124,8 @@ class ScanPipeline:
             stats_results.append(res)
             
         logger.info("\nStatistics Summary:\n" + pd.DataFrame(stats_results).to_string(index=False))
-        logger.info("Statistics completed.\n")
 
+    @Timer("Visualization and storage")
     def run_visualization_and_storage(self):
         if self.results_df.empty:
             return
@@ -143,14 +140,12 @@ class ScanPipeline:
             num_cores = self.config.visualize.cores
             with mp.Pool(processes=min(len(tasks), num_cores)) as pool:
                 pool.map(_visualize_and_storage_worker, tasks)
-                    
-            logger.info("Visualization and storage completed.\n")
 
+    @Timer("Upload to drive")
     def run_upload_to_drive(self):
         """Upload Excel reports to Google Drive in parallel."""
-        if self.config.upload.enabled:
+        if self.config.upload.enabled:      
             logger.info("Uploading reports to Google Drive in parallel...")
-            # Use absolute path relative to PROJECT_ROOT
             target_dir = PROJECT_ROOT / self.config.storage.output_dir
             if not target_dir.exists():
                 logger.warning(f"Upload directory not found: {target_dir}")
@@ -168,21 +163,20 @@ class ScanPipeline:
 
             tasks = [(f, self.config) for f in excel_files]
             
-            # Use Pool for parallel uploads
             num_cores = min(len(tasks), self.config.upload.cores)
             with mp.Pool(processes=num_cores) as pool:
                 results = pool.map(_upload_worker, tasks)
             
-            # Collect successful links
             new_urls = {}
+            success_count = 0
             for fname, link_dict in results:
                 if fname and link_dict:
+                    success_count += 1
                     new_urls.update(link_dict)
             
             if new_urls:
                 from gigaalpha.utils.track_link import update_drive_link_json
                 update_drive_link_json(str(self.config.log_link.sheet_path), new_urls)
-                    
-            logger.info("Uploading completed.\n")
-
-    
+            
+            return success_count, len(tasks)
+        return 0, 0

@@ -32,20 +32,24 @@ class ScoringService:
 
     def run_sequential(self):
         time_start = time.time()
-        logger.info("Running ScoringService sequentially...")
+        logger.info("Running scoring sequentially")
         
-        flat_results = compute_scores(
-            chunk_df=self.df,
-            sharpe_map=self.sharpe_map,
-            dim_values=self.dim_values,
-            dim_value_to_idx=self.dim_value_to_idx,
-            num_neighbors=self.num_neighbors,
-            col_target=self.col_target,
-            col_strategy=self.col_strategy,
-            mode_test=self.mode_test
-        )
-        df_results = pd.DataFrame(flat_results, index=self.df.index)
-        
+        try:
+            flat_results = compute_scores(
+                chunk_df=self.df,
+                sharpe_map=self.sharpe_map,
+                dim_values=self.dim_values,
+                dim_value_to_idx=self.dim_value_to_idx,
+                num_neighbors=self.num_neighbors,
+                col_target=self.col_target,
+                col_strategy=self.col_strategy,
+                mode_test=self.mode_test
+            )
+            df_results = pd.DataFrame(flat_results, index=self.df.index)
+        except Exception:
+            logger.exception("Scoring failed in sequential mode")
+            return self.df
+            
         elapsed = (time.time() - time_start) / 60
         logger.info(f"Sequential score computation completed in {elapsed:.2f} mins")
         return pd.concat([self.df, df_results], axis=1)
@@ -69,13 +73,14 @@ class ScoringService:
             mode_test=self.mode_test
         )
 
-        with mp.Pool(processes=cores) as pool:
-            chunks_results = pool.map(worker_func, df_chunks)
+        try:
+            with mp.Pool(processes=cores) as pool:
+                chunks_results = pool.map(worker_func, df_chunks)
 
-        flat_results = [item for sublist in chunks_results for item in sublist]
-        df_results = pd.DataFrame(flat_results, index=self.df.index)
-        
-        elapsed = (time.time() - time_start) / 60
-        logger.info(f"Parallel score with {cores} cores computation completed in {elapsed:.2f} mins")
+            flat_results = [item for sublist in chunks_results for item in sublist]
+            df_results = pd.DataFrame(flat_results, index=self.df.index)
+        except Exception:
+            logger.exception("Scoring failed in parallel mode")
+            return self.df
         
         return pd.concat([self.df, df_results], axis=1)

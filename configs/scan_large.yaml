@@ -6,7 +6,7 @@ data:
 backtest:
   alpha_name: "popbo_178"
   gen_name: "1_1"
-  # lst_frequency: [5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15]
+  lst_frequency: [60]
   lst_fee: [0.175]
   cores: 30
 
@@ -28,6 +28,8 @@ upload:
   enabled: true
   target_folder_id: "117gtokgAHiGDRF4c-6vmiXz75i_M1XQu"
   
-
 log_link:
   sheet_path: "logs/drive_links.json"
+
+notification:
+  enabled: true

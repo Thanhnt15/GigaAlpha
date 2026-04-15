@@ -15,13 +15,16 @@ class StorageService:
         self.output_path = output_path
     
     def save_to_xlsx(self):
-        processed_df = sort_report_data(self.df)
-        processed_df = rename_and_reorder_report_columns(processed_df)
-        
-        os.makedirs(os.path.dirname(self.output_path), exist_ok=True)
-        writer = pd.ExcelWriter(self.output_path, engine='xlsxwriter')
-        processed_df.to_excel(writer, index=False, sheet_name='Report')
-        apply_excel_report_formatting(writer.book, writer.sheets['Report'], processed_df)
+        try:
+            processed_df = sort_report_data(self.df)
+            processed_df = rename_and_reorder_report_columns(processed_df)
+            
+            os.makedirs(os.path.dirname(self.output_path), exist_ok=True)
+            writer = pd.ExcelWriter(self.output_path, engine='xlsxwriter')
+            processed_df.to_excel(writer, index=False, sheet_name='Report')
+            apply_excel_report_formatting(writer.book, writer.sheets['Report'], processed_df)
 
-        writer.close()
-        logger.info(f"Excel report saved successfully: {self.output_path} ({len(processed_df)} rows)")
+            writer.close()
+            logger.info(f"Excel report saved: {self.output_path} ({len(processed_df)} rows)")
+        except Exception:
+            logger.exception(f"Failed to save Excel report: {self.output_path}")
