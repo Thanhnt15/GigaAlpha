@@ -1,0 +1,11 @@
+# Ignore all strategy files by default to protect proprietary logic
+alphas/*.py
+gens/*.py
+
+# Allow package initialization
+!alphas/__init__.py
+!gens/__init__.py
+
+# Specifically allow sample files for demonstration
+!alphas/sample_alpha.py
+!gens/sample_gen.py
