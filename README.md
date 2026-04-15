@@ -1,8 +1,16 @@
 # GigaAlpha
 
-**High-performance, service-oriented quantitative trading strategy backtesting engine with automated analytics and cloud synchronization**
+GigaAlpha is a high-performance, modular quantitative research and strategy backtesting framework specialized for **Stock Derivatives**. It is designed for scalable parameter exploration, automated secondary scoring, and seamless cloud-based lifecycle management of sophisticated financial engineering models.
 
-GigaAlpha is a specialized research framework designed for rapid strategy exploration and rigorous quantitative analysis. It integrates multi-core parallel execution with automated evaluation services and cloud-based persistence.
+## Project Overview
+
+The core objective of GigaAlpha is to facilitate a professional-grade research-to-production pipeline for quantitative traders and financial engineers. Unlike traditional backtesters, GigaAlpha is built to handle the complexities of derivative products and supports advanced data abstraction modalities including:
+
+- **Time-Series Data**: Standard periodic sampling.
+- **Volume Bars**: Sampling based on trade intensity to mitigate heteroscedasticity.
+- **Dollar/Value Bars**: Sampling based on market value exchange to better capture institutional order flow.
+
+By leveraging a service-oriented architecture (SOA) and parallelized execution engines, it transforms complex parameter grid searches into structured, risk-adjusted actionable intelligence.
 
 ## Architecture At A Glance
 
