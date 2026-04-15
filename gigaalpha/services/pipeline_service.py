@@ -42,7 +42,8 @@ def _visualize_and_storage_worker(task):
             storage.save_to_xlsx()
 
     except Exception as e:
-        logger.error(f"Error: {e}")
+        import traceback
+        logger.error(f"Visualization/Storage failed for segment {segment}:\n{traceback.format_exc()}")
         return None
 
 def _upload_worker(task):
@@ -59,7 +60,8 @@ def _upload_worker(task):
             link = uploader.upload_to_drive()
             return (Path(local_path).name, link)
     except Exception as e:
-        logger.error(f"Upload Error for {local_path}: {e}")
+        import traceback
+        logger.error(f"Upload failed for {local_path}:\n{traceback.format_exc()}")
     return (None, None)
 
 class ScanPipeline:
@@ -67,7 +69,9 @@ class ScanPipeline:
         self.config = config
         self.results_df = pd.DataFrame()
 
-    def run_backtest_and_statistics(self):
+    def run_backtest(self):
+        """Generate configurations and run the core backtesting simulator in parallel."""
+        logger.info(f"--- CORE BACKTEST ---")
         backtester = BacktestService(dic_data=pd.read_pickle(PROJECT_ROOT / self.config.data.path), segments=self.config.data.segments)
         lst_configs = ScanParams.gen_all_params(
             alpha_name = self.config.backtest.alpha_name,
@@ -78,29 +82,52 @@ class ScanPipeline:
         
         logger.info(f"Running parallel backtest with {self.config.backtest.cores} cores")
         logger.info(f'Alpha: {self.config.backtest.alpha_name} | Gen: {self.config.backtest.gen_name} | Total configs: {len(lst_configs)}')
+        
         self.results_df = pd.DataFrame(backtester.run_parallel(lst_configs, cores=self.config.backtest.cores))
         
         if self.results_df.empty:
             logger.error("No results generated.")
             return
+        logger.info("Backtest completed successfully.\n")
 
-        logger.info("Compute sharpe score and statistics") if self.config.compute_score.enabled else logger.info("Compute statistics")
+    def run_scoring(self):
+        """Calculate K-Neighbors Sharpe scores (if enabled)."""
+        if self.results_df.empty or not self.config.compute_score.enabled:
+            return
+            
+        logger.info(f"--- COMPUTE SCORING ---")
+        logger.info("Computing K-Neighbors Sharpe score in parallel...")
+        
         score_results = []
-        stats_results = []
         for segment in self.results_df['segment'].unique():
             seg_df = self.results_df[self.results_df['segment'] == segment].copy()
-            if self.config.compute_score.enabled:
-                scorer = ScoringService(df=seg_df, num_neighbors=self.config.compute_score.num_neighbors)
-                seg_df = scorer.run_parallel(cores=self.config.compute_score.cores)
+            scorer = ScoringService(df=seg_df, num_neighbors=self.config.compute_score.num_neighbors)
+            scored_df = scorer.run_parallel(cores=self.config.compute_score.cores)
+            score_results.append(scored_df)
+            
+        if score_results:
+            self.results_df = pd.concat(score_results, ignore_index=True)
+            
+        logger.info("Scoring completed.\n")
+
+    def run_statistics(self):
+        """Aggregate performance statistics."""
+        if self.results_df.empty:
+            return
         
-            score_results.append(seg_df)
+        logger.info(f"--- STATISTICS SUMMARY ---")
+        logger.info("Computing basic statistics...")
+            
+        stats_results = []
+        
+        for segment in self.results_df['segment'].unique():
+            seg_df = self.results_df[self.results_df['segment'] == segment]
             stats_service = StatisticsService(df=seg_df)
             res = stats_service.run_statistics(segment)
             stats_results.append(res)
-        logger.info("\n" + pd.DataFrame(stats_results).to_string(index=False))
-        if score_results:
-            self.results_df = pd.concat(score_results, ignore_index=True)
-        logger.info("Backtest and statistics completed.\n")
+            
+        logger.info("\nStatistics Summary:\n" + pd.DataFrame(stats_results).to_string(index=False))
+        logger.info("Statistics completed.\n")
 
     def run_visualization_and_storage(self):
         if self.results_df.empty:
@@ -120,7 +147,7 @@ class ScanPipeline:
             logger.info("Visualization and storage completed.\n")
 
     def run_upload_to_drive(self):
-        """Phase 2.5: Upload Excel reports to Google Drive in parallel."""
+        """Upload Excel reports to Google Drive in parallel."""
         if self.config.upload.enabled:
             logger.info("Uploading reports to Google Drive in parallel...")
             # Use absolute path relative to PROJECT_ROOT
@@ -154,9 +181,7 @@ class ScanPipeline:
             
             if new_urls:
                 from gigaalpha.utils.track_link import update_drive_link_json
-                # Ensure the path is absolute relative to PROJECT_ROOT
-                json_path = PROJECT_ROOT / self.config.log_link.sheet_path
-                update_drive_link_json(str(json_path), new_urls)
+                update_drive_link_json(str(self.config.log_link.sheet_path), new_urls)
                     
             logger.info("Uploading completed.\n")
 

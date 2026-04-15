@@ -38,7 +38,9 @@ def _single_simulation(config: Dict[str, Any], segments: Optional[List]):
         )
         return sim.execute_pipeline(segments)
     except Exception as e:
-        return [], f"{type(e).__name__}:{str(e)}"
+        import traceback
+        logger.error(f"Simulation failed for config: {config}\n{traceback.format_exc()}")
+        return []
     
 class BacktestService:
     def __init__(self, dic_data: Dict[str, pd.DataFrame], segments: Optional[List]):

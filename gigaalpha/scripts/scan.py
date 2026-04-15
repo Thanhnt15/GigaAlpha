@@ -26,8 +26,15 @@ if __name__ == '__main__':
     pipeline = ScanPipeline(pipeline_config)
 
     with Timer("Total execution"):
-        with Timer("Backtest and statistics"):
-            pipeline.run_backtest_and_statistics()
+        with Timer("Core Backtest"):
+            pipeline.run_backtest()
+            
+        if pipeline_config.compute_score.enabled:
+            with Timer("Scoring Computation"):
+                pipeline.run_scoring()
+            
+        with Timer("Statistics Summary"):
+            pipeline.run_statistics()
         
         if pipeline_config.visualize.enabled or pipeline_config.storage.enabled:
             with Timer("Visualization and storage"):

@@ -46,15 +46,33 @@ class Simulator:
         return {**self.report, **perf}
 
     def execute_pipeline(self, segments):
-        self.compute_signal()
-        self.compute_position()
-        self.compute_tvr_and_fee()
-        self.compute_profits()
+        try:
+            self.compute_signal()
+        except Exception as e:
+            raise RuntimeError(f"Failed at compute_signal for strategy dict {self.report['strategy']}: {e}") from e
+
+        try:
+            self.compute_position()
+        except Exception as e:
+            raise RuntimeError(f"Failed at compute_position for strategy {self.report['strategy']}: {e}") from e
+
+        try:
+            self.compute_tvr_and_fee()
+        except Exception as e:
+            raise RuntimeError(f"Failed at compute_tvr_and_fee for strategy {self.report['strategy']}: {e}") from e
+
+        try:
+            self.compute_profits()
+        except Exception as e:
+            raise RuntimeError(f"Failed at compute_profits for strategy {self.report['strategy']}: {e}") from e
 
         reports = []
         for segment in segments:
             start, end = segment[0], segment[1]
-            report = self.compute_performance(start, end)
-            report['segment'] = f'{start}_{end}'
-            reports.append(report)
+            try:
+                report = self.compute_performance(start, end)
+                report['segment'] = f'{start}_{end}'
+                reports.append(report)
+            except Exception as e:
+                raise RuntimeError(f"Failed at compute_performance for segment {start}_{end} (strategy {self.report['strategy']}): {e}") from e
         return reports
