@@ -89,12 +89,13 @@ class TelegramHandler(logging.Handler):
         except Exception as e:
             print(f"Telegram Handler Error: {e}", file=sys.stderr)
 
-def setup_logging():
+def setup_logging(enable_file_logging=True):
     project_root = Path(__file__).resolve().parents[2]
     log_dir = project_root / "logs"
-    log_dir.mkdir(exist_ok=True)
     
-    cleanup_old_logs(log_dir, max_days=14)
+    if enable_file_logging:
+        log_dir.mkdir(exist_ok=True)
+        cleanup_old_logs(log_dir, max_days=14)
     
     if not logging.getLogger().handlers:
         from gigaalpha.helpers.system import System
@@ -110,28 +111,29 @@ def setup_logging():
         console_h = logging.StreamHandler(sys.stdout)
         console_h.setLevel(logging.INFO)
         console_h.setFormatter(simple_fmt)
-
-        ui_file_h = RotatingFileHandler(log_dir / "system.log", maxBytes=5*1024*1024, backupCount=2, encoding='utf-8')
-        ui_file_h.setLevel(logging.INFO)
-        ui_file_h.setFormatter(simple_fmt)
-
-        dev_file_h = RotatingFileHandler(log_dir / "system_debug.log", maxBytes=10*1024*1024, backupCount=5, encoding='utf-8')
-        dev_file_h.setLevel(logging.DEBUG)
-        dev_file_h.setFormatter(detailed_fmt)
-
         logger.addHandler(console_h)
-        logger.addHandler(ui_file_h)
-        logger.addHandler(dev_file_h)
 
-        token = os.getenv("TELEGRAM_BOT_TOKEN", "").strip().replace('"', '').replace("'", "")
-        chat_id = os.getenv("TELEGRAM_CHAT_ID", "").strip().replace('"', '').replace("'", "")
-        
-        if token and chat_id:
-            tele_h = TelegramHandler(token, chat_id)
-            tele_h.setLevel(logging.WARNING)
-            tele_h.setFormatter(detailed_fmt)
-            logger.addHandler(tele_h)
-        else:
-            print("\n⚠️  [MONITORING] Telegram Alert is DISABLED: Missing TELEGRAM_BOT_TOKEN or TELEGRAM_CHAT_ID\n", file=sys.stderr)
+        if enable_file_logging:
+            ui_file_h = RotatingFileHandler(log_dir / "system.log", maxBytes=5*1024*1024, backupCount=2, encoding='utf-8')
+            ui_file_h.setLevel(logging.INFO)
+            ui_file_h.setFormatter(simple_fmt)
+
+            dev_file_h = RotatingFileHandler(log_dir / "system_debug.log", maxBytes=10*1024*1024, backupCount=5, encoding='utf-8')
+            dev_file_h.setLevel(logging.DEBUG)
+            dev_file_h.setFormatter(detailed_fmt)
+
+            logger.addHandler(ui_file_h)
+            logger.addHandler(dev_file_h)
+
+            token = os.getenv("TELEGRAM_BOT_TOKEN", "").strip().replace('"', '').replace("'", "")
+            chat_id = os.getenv("TELEGRAM_CHAT_ID", "").strip().replace('"', '').replace("'", "")
+            
+            if token and chat_id:
+                tele_h = TelegramHandler(token, chat_id)
+                tele_h.setLevel(logging.WARNING)
+                tele_h.setFormatter(detailed_fmt)
+                logger.addHandler(tele_h)
+            else:
+                print("\n⚠️  [MONITORING] Telegram Alert is DISABLED: Missing TELEGRAM_BOT_TOKEN or TELEGRAM_CHAT_ID\n", file=sys.stderr)
 
         logging.getLogger('googleapiclient.discovery_cache').setLevel(logging.ERROR)

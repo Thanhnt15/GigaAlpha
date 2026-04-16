@@ -65,6 +65,10 @@ class NotificationConfig:
     enabled: bool = False
 
 @dataclass
+class SystemLogConfig:
+    enabled: bool = True
+
+@dataclass
 class PipelineConfig:
     data: DataConfig = field(default_factory=DataConfig)
     backtest: BacktestConfig = field(default_factory=BacktestConfig)
@@ -74,6 +78,7 @@ class PipelineConfig:
     upload: UploadConfig = field(default_factory=UploadConfig)
     log_link: LogLinkConfig = field(default_factory=LogLinkConfig)
     notification: NotificationConfig = field(default_factory=NotificationConfig)
+    system_log: SystemLogConfig = field(default_factory=SystemLogConfig)
 
     @staticmethod
     def _map(cls: Type, data: Dict) -> Any:

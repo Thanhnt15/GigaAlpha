@@ -13,6 +13,9 @@ backtest:
   lst_fee: [0.175]
   cores: 30
 
+system_log:
+  enabled: false
+
 compute_score:
   enabled: false
   num_neighbors: 4

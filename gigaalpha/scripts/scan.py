@@ -1,4 +1,4 @@
-import sys, argparse
+import sys, argparse, logging
 from pathlib import Path
 
 PROJECT_ROOT = Path(__file__).parents[2]
@@ -12,15 +12,14 @@ from gigaalpha.helpers.timer import Timer
 import gigaalpha.strategies
 
 if __name__ == '__main__':
-    setup_logging()
-    import logging
-    logger = logging.getLogger(__name__)
-    
     parser = argparse.ArgumentParser(description="GigaAlpha Scan Pipeline")
     parser.add_argument('--config', default='configs/default.yaml', help='Path to YAML config file (default: configs/default.yaml)')
     args = parser.parse_args()
 
     pipeline_config = PipelineConfig.load(str(args.config))
+    
+    setup_logging(enable_file_logging=pipeline_config.system_log.enabled)
+    logger = logging.getLogger(__name__)
     notifier = NotificationService()
     
     logger.info(f"Running Scan Pipeline with config: {args.config}")
