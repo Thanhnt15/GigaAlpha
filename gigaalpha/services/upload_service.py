@@ -15,8 +15,8 @@ class UploadService:
     def upload_to_drive(self):
         """Execute upload of a single file to Google Drive with integrated API jitter."""
         try:
-            # Prevent API Thundering Herd: Force workers to sleep for a random 0.5-5.0s offset before starting
-            jitter = random.uniform(0.5, 5.0)
+            # Prevent API Thundering Herd: Force workers to sleep for a random 0.5-2.0s offset before starting
+            jitter = random.uniform(0.5, 2.0)
             time.sleep(jitter)
             
             logger.info(f"Uploading file to Drive: {self.local_path} (Delay {jitter:.2f}s)")

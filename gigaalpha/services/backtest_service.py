@@ -1,20 +1,23 @@
 import logging, gc
-import pandas as pd     
+import pandas as pd 
+import multiprocessing as mp
 from typing import List, Dict, Any, Optional
-from functools import partial
+from tqdm import tqdm
 
 logger = logging.getLogger(__name__)
 
 _DIC_DATA_WORKER = None
+_SEGMENTS_WORKER = None
 
-def _init_data(dic_data: Dict[str, pd.DataFrame]):
-    """Initialize data for worker processes."""
-    global _DIC_DATA_WORKER
+def _init_data(dic_data: Dict[str, pd.DataFrame], segments: Optional[List]):
+    """Initialize data and segments for worker processes."""
+    global _DIC_DATA_WORKER, _SEGMENTS_WORKER
     if _DIC_DATA_WORKER is None:
         _DIC_DATA_WORKER = dic_data
-    gc.collect()
+    if _SEGMENTS_WORKER is None:
+        _SEGMENTS_WORKER = segments
 
-def _single_simulation(config: Dict[str, Any], segments: Optional[List]):
+def _single_simulation(config: Dict[str, Any], segments: Optional[List] = None):
     from gigaalpha.core.simulator import Simulator
     from gigaalpha.core.registry import ALPHA_REGISTRY, GEN_REGISTRY
     try:
@@ -36,7 +39,9 @@ def _single_simulation(config: Dict[str, Any], segments: Optional[List]):
             gen_params=gen_params,
             fee=config['fee']
         )
-        return sim.execute_pipeline(segments)
+        # Use global segments if not provided (typical for parallel runs)
+        target_segments = segments if segments is not None else _SEGMENTS_WORKER
+        return sim.execute_pipeline(target_segments)
     except Exception as e:
         import traceback
         logger.error(f"Simulation failed for config: {config}\n{traceback.format_exc()}")
@@ -48,8 +53,6 @@ class BacktestService:
         self.segments = segments 
     
     def run_sequential(self, lst_configs: List[Dict[str, Any]]):
-        from tqdm import tqdm
-
         global _DIC_DATA_WORKER
         _DIC_DATA_WORKER = self.dic_data
         
@@ -61,18 +64,12 @@ class BacktestService:
         return all_results
     
     def run_parallel(self, lst_configs: List[Dict[str, Any]], cores: int):
-        from tqdm import tqdm
-        import multiprocessing as mp
-        
         global _DIC_DATA_WORKER
         _DIC_DATA_WORKER = self.dic_data
         
-        single_simulation_partial = partial(_single_simulation, segments=self.segments)
-        chunksize = max(1, len(lst_configs) // (cores * 4))
-        
         all_results = []
-        with mp.Pool(processes=cores, initializer=_init_data, initargs=(self.dic_data,)) as pool:
-            for res in tqdm(pool.imap_unordered(single_simulation_partial, lst_configs, chunksize=chunksize), 
+        with mp.Pool(processes=cores, initializer=_init_data, initargs=(self.dic_data, self.segments)) as pool:
+            for res in tqdm(pool.imap_unordered(_single_simulation, lst_configs, chunksize=10), 
                             total=len(lst_configs), desc="Parallel Backtest"):
                 if res:
                     all_results.extend(res)       

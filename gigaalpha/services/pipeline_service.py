@@ -131,13 +131,17 @@ class ScanPipeline:
             return
             
         if self.config.visualize.enabled or self.config.storage.enabled:
-            logger.info(f"Generating professional reports and visualizations in parallel with {max(self.config.visualize.cores, self.config.storage.cores)} cores...")
+            actions = []
+            if self.config.storage.enabled: actions.append("reports")
+            if self.config.visualize.enabled: actions.append("visualizations")
+            
+            num_cores = max(self.config.visualize.cores, self.config.storage.cores)
+            logger.info(f"Generating professional {' and '.join(actions)} in parallel with {num_cores} cores...")
             tasks = []
             for segment in self.results_df['segment'].unique():
                 seg_df = self.results_df[self.results_df['segment'] == segment].copy()
                 tasks.append((segment, seg_df, self.config))
             
-            num_cores = max(self.config.visualize.cores, self.config.storage.cores)
             with mp.Pool(processes=min(len(tasks), num_cores)) as pool:
                 pool.map(_visualize_and_storage_worker, tasks)
 
@@ -162,13 +166,10 @@ class ScanPipeline:
                 return
 
             tasks = [(f, self.config) for f in excel_files]
-            
-            num_cores = min(len(tasks), self.config.upload.cores)
-            with mp.Pool(processes=num_cores) as pool:
+            with mp.Pool(processes=self.config.upload.cores) as pool:
                 results = pool.map(_upload_worker, tasks)
             
-            new_urls = {}
-            success_count = 0
+            new_urls, success_count = {}, 0
             for fname, link_dict in results:
                 if fname and link_dict:
                     success_count += 1
