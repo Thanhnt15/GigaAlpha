@@ -52,8 +52,9 @@ class BacktestService:
         self.segments = segments 
     
     def run_sequential(self, lst_configs: List[Dict[str, Any]]):
-        global _DIC_DATA_WORKER
+        global _DIC_DATA_WORKER, _SEGMENTS_WORKER
         _DIC_DATA_WORKER = self.dic_data
+        _SEGMENTS_WORKER = self.segments
         
         all_results = []
         for config in tqdm(lst_configs, desc="Sequential Backtest"):
@@ -63,9 +64,6 @@ class BacktestService:
         return all_results
     
     def run_parallel(self, lst_configs: List[Dict[str, Any]], cores: int):
-        global _DIC_DATA_WORKER
-        _DIC_DATA_WORKER = self.dic_data
-        
         all_results = []
         with mp.Pool(processes=cores, initializer=_init_data, initargs=(self.dic_data, self.segments)) as pool:
             for res in tqdm(pool.imap_unordered(_single_simulation, lst_configs, chunksize=10), 
