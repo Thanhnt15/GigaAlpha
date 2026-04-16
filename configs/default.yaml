@@ -27,12 +27,12 @@ visualize:
 storage:
   enabled: false
   output_dir: "outputs/excel"
+  cores: 13
 
 upload:
   enabled: false
   target_folder_id: ""
   cores: 13
-
 
 log_link:
   sheet_path: "logs/drive_links.json"

@@ -27,20 +27,22 @@ compute_score:
   num_neighbors: 4
   cores: 30
 
-storage:
-  enabled: true
-  output_dir: "outputs/excel"
-
 visualize:
   enabled: false
   output_dir: "outputs/html"
   chart_colors: ['#081d58', '#225ea8', '#41b6c4', '#7ed957', '#edf8b1']
+  cores: 13
+
+storage:
+  enabled: true
+  output_dir: "outputs/excel"
+  cores: 13
 
 upload:
   enabled: true
   target_folder_id: "117gtokgAHiGDRF4c-6vmiXz75i_M1XQu"
+  cores: 13
   
-
 log_link:
   sheet_path: "logs/drive_links.json"
 
