@@ -1,6 +1,5 @@
 import os
 import logging
-import socket
 from gigaalpha.helpers.telegram import TelegramBot
 
 logger = logging.getLogger(__name__)
@@ -21,15 +20,18 @@ class NotificationService:
 
     def notify_success(self, config, results_df, total_time: str, success_count: int, total_count: int):
         """Processes raw data and sends a professional success summary."""
-        if not self.bot:
+        if not self.bot or not config.notification.enabled:
             return
 
         icon = " ✅" if (total_count > 0 and success_count == total_count) else " ⚠️"
         upload_ratio = f"{success_count}/{total_count}{icon}" if total_count > 0 else "N/A"
 
+        # Calculate unique configurations tested (regardless of segments)
+        num_configs = results_df['strategy'].nunique() if not results_df.empty else 0
+
         message = (
             f"✅ <b>Scan Success</b>\n"
-            f"Alpha: {config.backtest.alpha_name} Gen: {config.backtest.gen_name} Configs: {len(results_df)}\n"
+            f"Alpha: {config.backtest.alpha_name} | Gen: {config.backtest.gen_name} | Configs: {num_configs}\n"
             f"Time: {total_time} | Upload: {upload_ratio}"
         )
         self.bot.send_message(message)

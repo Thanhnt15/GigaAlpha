@@ -11,7 +11,7 @@ backtest:
   gen_name: "1_1"
   lst_frequency: [15]
   lst_fee: [0.175]
-  cores: 20
+  cores: 30
 
 compute_score:
   enabled: false
@@ -22,7 +22,7 @@ visualize:
   enabled: false
   output_dir: "outputs/html"
   chart_colors: ['#081d58', '#225ea8', '#41b6c4', '#7ed957', '#edf8b1']
-  cores: 8
+  cores: 13
 
 storage:
   enabled: false
@@ -31,9 +31,12 @@ storage:
 upload:
   enabled: false
   target_folder_id: ""
-  cores: 10
+  cores: 13
 
 
 log_link:
   sheet_path: "logs/drive_links.json"
+
+notification:
+  enabled: false
 

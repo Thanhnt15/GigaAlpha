@@ -43,3 +43,7 @@ upload:
 
 log_link:
   sheet_path: "logs/drive_links.json"
+
+notification:
+  enabled: true
+

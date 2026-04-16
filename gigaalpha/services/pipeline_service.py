@@ -78,7 +78,7 @@ class ScanPipeline:
             lst_fee = self.config.backtest.lst_fee,
         )
         
-        logger.info(f"Running parallel backtest with {self.config.backtest.cores} cores")
+        logger.info(f"Running parallel backtest with {self.config.backtest.cores} cores...")
         logger.info(f'Alpha: {self.config.backtest.alpha_name} | Gen: {self.config.backtest.gen_name} | Total configs: {len(lst_configs)}')
         
         self.results_df = pd.DataFrame(backtester.run_parallel(lst_configs, cores=self.config.backtest.cores))
