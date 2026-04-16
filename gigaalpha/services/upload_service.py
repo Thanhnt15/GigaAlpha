@@ -1,19 +1,25 @@
 import logging
+import time
+import random
 from gigaalpha.helpers.drive import GDrive
 
 logger = logging.getLogger(__name__)
 
 class UploadService:
     def __init__(self, local_path: str, token_path: str, target_folder_id: str):
-        """Khởi tạo với đường dẫn file đơn lẻ để chuẩn bị cho worker."""
+        """Initialize with a single file path in preparation for the worker."""
         self.local_path = local_path
         self.token_path = token_path
         self.target_folder_id = target_folder_id
 
     def upload_to_drive(self):
-        """Thực hiện upload một file đơn lẻ lên Google Drive."""
+        """Execute upload of a single file to Google Drive with integrated API jitter."""
         try:
-            logger.info(f"Uploading file to Drive: {self.local_path}")
+            # Prevent API Thundering Herd: Force workers to sleep for a random 0.5-5.0s offset before starting
+            jitter = random.uniform(0.5, 5.0)
+            time.sleep(jitter)
+            
+            logger.info(f"Uploading file to Drive: {self.local_path} (Delay {jitter:.2f}s)")
             return GDrive.upload_files(
                 token_path=self.token_path,
                 file_paths=[self.local_path],

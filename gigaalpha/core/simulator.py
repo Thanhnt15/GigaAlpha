@@ -3,7 +3,7 @@ from gigaalpha.core.metrics import AlphaDomains
 
 class Simulator:
     def __init__(self, data, frequency, alpha_name, alpha_params, gen_name, gen_params, fee=0.175):
-        self.data = data.copy()
+        self.data = data.copy(deep=False)
         self.fee = fee
         self.frequency = frequency
 
@@ -41,8 +41,8 @@ class Simulator:
     def compute_profits(self):
         AlphaDomains.compute_profits(self.data)
 
-    def compute_performance(self, start, end):
-        perf = AlphaDomains.compute_performance(self.data, start=start, end=end)
+    def compute_performance(self, df_1d, start, end):
+        perf = AlphaDomains.compute_performance(df_1d, start=start, end=end)
         return {**self.report, **perf}
 
     def execute_pipeline(self, segments):
@@ -66,11 +66,16 @@ class Simulator:
         except Exception as e:
             raise RuntimeError(f"Failed at compute_profits for strategy {self.report['strategy']}: {e}") from e
 
+        try:
+            df_1d_master = AlphaDomains.aggregate_to_1d(self.data)
+        except Exception as e:
+            raise RuntimeError(f"Failed at aggregate_to_1d for strategy {self.report['strategy']}: {e}") from e
+
         reports = []
         for segment in segments:
             start, end = segment[0], segment[1]
             try:
-                report = self.compute_performance(start, end)
+                report = self.compute_performance(df_1d_master, start, end)
                 report['segment'] = f'{start}_{end}'
                 reports.append(report)
             except Exception as e:

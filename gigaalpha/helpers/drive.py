@@ -1,4 +1,4 @@
-import os, pickle, socket, time, logging
+import os, pickle, socket, time, logging, random
 from typing import List, Optional, Dict
 from googleapiclient.discovery import build, Resource
 from google_auth_oauthlib.flow import InstalledAppFlow
@@ -114,10 +114,11 @@ class GDrive:
                 return response.get('id')
 
             except Exception as e:
-                logger.debug(f"DEBUG ERROR: {str(e)}")
-                if any(x in str(e) for x in ["500", "503", "504", "socket"]):
-                    wait_time = (attempt + 1) * 20
-                    logger.warning(f"[GDrive] Network/server error. Retrying in {wait_time}s...")
+                err_str = str(e)
+                logger.debug(f"DEBUG ERROR: {err_str}")
+                if any(x in err_str for x in ["500", "503", "504", "403", "429", "socket", "rateLimit", "Too Many Requests", "User Rate Limit"]):
+                    wait_time = (2 ** attempt) * 5 + random.uniform(0, 5)
+                    logger.warning(f"[GDrive] Network or API Rate Limit error. Retrying in {wait_time:.1f}s...")
                     time.sleep(wait_time)
                     continue
                 logger.error(f"[GDrive] sync_file failed: {e}")

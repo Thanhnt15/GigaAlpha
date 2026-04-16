@@ -48,22 +48,24 @@ class AlphaDomains:
         return round(working_days)
     
     @staticmethod
-    def compute_performance(df, start=None, end=None, equity=300):
+    def aggregate_to_1d(df):
+        agg_dict = {
+            "turnover": "sum",
+            "netProfit": "sum",
+        }
+        if "booksize" in df.columns:
+            agg_dict["booksize"] = "last"
+        return df.groupby('day').agg(agg_dict)
+
+    @staticmethod
+    def compute_performance(df_1d, start=None, end=None, equity=300):
         try:
             if start is not None:
-                df = df[df['day'] >= start]
+                df_1d = df_1d[df_1d.index >= start]
             if end is not None:
-                df = df[df['day'] <= end]
+                df_1d = df_1d[df_1d.index <= end]
 
-            agg_dict = {
-                "turnover": "sum",
-                "netProfit": "sum",
-            }
-            
-            if "booksize" in df.columns:
-                agg_dict["booksize"] = "last"
-
-            df_1d = df.groupby('day').agg(agg_dict)
+            df_1d = df_1d.copy()
             df_1d['cumnet'] = df_1d['netProfit'].cumsum()
 
             try:
