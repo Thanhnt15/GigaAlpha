@@ -39,7 +39,6 @@ def _single_simulation(config: Dict[str, Any], segments: Optional[List] = None):
             gen_params=gen_params,
             fee=config['fee']
         )
-        # Use global segments if not provided (typical for parallel runs)
         target_segments = segments if segments is not None else _SEGMENTS_WORKER
         return sim.execute_pipeline(target_segments)
     except Exception as e:
