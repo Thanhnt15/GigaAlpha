@@ -16,7 +16,7 @@ data:
     - ['2024_01_01', '2026_01_01']
 
 backtest:
-  alpha_name: "popbo_178"
+  alpha_name: "popbo_003"
   gen_name: "1_1"
   # lst_frequency: [15.0]
   lst_fee: [0.175]
@@ -32,7 +32,7 @@ storage:
   output_dir: "outputs/excel"
 
 visualize:
-  enabled: true
+  enabled: false
   output_dir: "outputs/html"
   chart_colors: ['#081d58', '#225ea8', '#41b6c4', '#7ed957', '#edf8b1']
 

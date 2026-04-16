@@ -40,20 +40,21 @@ class VisualizeConfig:
     enabled: bool = True
     output_dir: str = "outputs/html" 
     chart_colors: List[str] = field(default_factory=lambda: ['#081d58', '#225ea8', '#41b6c4', '#7ed957', '#edf8b1'])
-    cores: int = 8
+    cores: int = 1
 
 
 @dataclass
 class StorageConfig:
     enabled: bool = True
     output_dir: str = "outputs/excel"
+    cores: int = 1
 
 
 @dataclass
 class UploadConfig:
     enabled: bool = False
     target_folder_id: str = ""
-    cores: int = 10
+    cores: int = 1
 
 @dataclass
 class LogLinkConfig:

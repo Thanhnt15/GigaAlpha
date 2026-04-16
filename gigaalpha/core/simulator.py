@@ -13,9 +13,11 @@ class Simulator:
         self.gen_params   = gen_params
 
         strategy_id = [str(frequency)] if frequency else []
-        for v in alpha_params.values():
+        for k in sorted(alpha_params.keys()):
+            v = alpha_params[k]
             strategy_id.append(str(round(v, 4)) if isinstance(v, (float, int)) else str(v))
-        for v in gen_params.values():
+        for k in sorted(gen_params.keys()):
+            v = gen_params[k]
             strategy_id.append(str(round(v, 4)) if isinstance(v, (float, int)) else str(v))
             
         self.report = {

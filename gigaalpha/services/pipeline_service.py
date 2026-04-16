@@ -95,7 +95,7 @@ class ScanPipeline:
             return
             
         logger.info(f"Compute scoring")
-        logger.info("Computing K-Neighbors Sharpe score in parallel...")
+        logger.info(f"Computing K-Neighbors Sharpe score in parallel with {self.config.compute_score.cores} cores...")
         
         score_results = []
         for segment in self.results_df['segment'].unique():
@@ -131,13 +131,13 @@ class ScanPipeline:
             return
             
         if self.config.visualize.enabled or self.config.storage.enabled:
-            logger.info("Generating professional reports and visualizations in parallel...")
+            logger.info(f"Generating professional reports and visualizations in parallel with {max(self.config.visualize.cores, self.config.storage.cores)} cores...")
             tasks = []
             for segment in self.results_df['segment'].unique():
                 seg_df = self.results_df[self.results_df['segment'] == segment].copy()
                 tasks.append((segment, seg_df, self.config))
             
-            num_cores = self.config.visualize.cores
+            num_cores = max(self.config.visualize.cores, self.config.storage.cores)
             with mp.Pool(processes=min(len(tasks), num_cores)) as pool:
                 pool.map(_visualize_and_storage_worker, tasks)
 
@@ -145,7 +145,7 @@ class ScanPipeline:
     def run_upload_to_drive(self):
         """Upload Excel reports to Google Drive in parallel."""
         if self.config.upload.enabled:      
-            logger.info("Uploading reports to Google Drive in parallel...")
+            logger.info(f"Uploading reports to Google Drive in parallel with {self.config.upload.cores} cores...")
             target_dir = PROJECT_ROOT / self.config.storage.output_dir
             if not target_dir.exists():
                 logger.warning(f"Upload directory not found: {target_dir}")

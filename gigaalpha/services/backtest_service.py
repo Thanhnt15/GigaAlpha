@@ -68,9 +68,11 @@ class BacktestService:
         _DIC_DATA_WORKER = self.dic_data
         
         single_simulation_partial = partial(_single_simulation, segments=self.segments)
+        chunksize = max(1, len(lst_configs) // (cores * 4))
+        
         all_results = []
         with mp.Pool(processes=cores, initializer=_init_data, initargs=(self.dic_data,)) as pool:
-            for res in tqdm(pool.imap_unordered(single_simulation_partial, lst_configs, chunksize=10), 
+            for res in tqdm(pool.imap_unordered(single_simulation_partial, lst_configs, chunksize=chunksize), 
                             total=len(lst_configs), desc="Parallel Backtest"):
                 if res:
                     all_results.extend(res)       
