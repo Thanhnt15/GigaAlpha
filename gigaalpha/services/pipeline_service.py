@@ -26,19 +26,17 @@ def _visualize_and_storage_worker(task):
             y = sorted([col for col in seg_df.columns if 'gen_' in col and col != 'gen_name'])[0]
 
             target_cols = [z, x, y]
-            data_name = config.data.data_name or ""
             output_dir = PROJECT_ROOT / config.visualize.output_dir
-            output_path_html = output_dir / f"3D_{config.backtest.alpha_name}_{config.backtest.gen_name}_{segment}{data_name}.html"
+            output_path_html = output_dir / f"3D_{config.backtest.alpha_name}_{config.backtest.gen_name}_{segment}.html"
             visualizer.run_visualization(
-                title=f"Sharpe_3D: Alpha_{config.backtest.alpha_name} | Gen_{config.backtest.gen_name} | {segment}{data_name}", 
+                title=f"Sharpe_3D: Alpha_{config.backtest.alpha_name} | Gen_{config.backtest.gen_name} | {segment}", 
                 target_cols=target_cols, 
                 colors=config.visualize.chart_colors, 
                 output_path=output_path_html
             )
         if config.storage.enabled:
-            data_name = config.data.data_name or ""
             output_dir = PROJECT_ROOT / config.storage.output_dir
-            output_path_excel = output_dir / f"alpha_{config.backtest.alpha_name}_{config.backtest.gen_name}_{segment}{data_name}.xlsx"
+            output_path_excel = output_dir / f"alpha_{config.backtest.alpha_name}_{config.backtest.gen_name}_{segment}.xlsx"
             storage = StorageService(df=seg_df, output_path=output_path_excel)
             storage.save_to_xlsx()
 
@@ -162,9 +160,8 @@ class ScanPipeline:
                 return
             
             excel_files = []
-            data_name = self.config.data.data_name or ""
             for segment in self.results_df['segment'].unique():
-                fpath = target_dir / f"alpha_{self.config.backtest.alpha_name}_{self.config.backtest.gen_name}_{segment}{data_name}.xlsx"
+                fpath = target_dir / f"alpha_{self.config.backtest.alpha_name}_{self.config.backtest.gen_name}_{segment}.xlsx"
                 if fpath.exists():
                     excel_files.append(str(fpath))
 

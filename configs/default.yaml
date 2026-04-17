@@ -1,6 +1,5 @@
 data:
   path: "data/sample_data.pickle"
-  data_name: "_time_series"
   segments: 
     - ["2022_01_01", "2026_01_01"]
     - ["2022_01_01", "2023_01_01"]

@@ -12,7 +12,6 @@ logger = logging.getLogger(__name__)
 @dataclass
 class DataConfig:
     path: str = ""
-    data_name: Optional[str] = None
     segments: List[List[str]] = field(default_factory=SEGMENTS)
 
 @dataclass
