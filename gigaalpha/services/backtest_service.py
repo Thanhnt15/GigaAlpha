@@ -1,4 +1,4 @@
-import logging, gc
+import logging, gc, traceback, sys
 import pandas as pd 
 import multiprocessing as mp
 from typing import List, Dict, Any, Optional
@@ -43,8 +43,8 @@ def _single_simulation(config: Dict[str, Any], segments: Optional[List] = None):
         return sim.execute_pipeline(target_segments)
     except Exception as e:
         import traceback
-        logger.error(f"Simulation failed for config: {config}\n{traceback.format_exc()}")
-        return []
+        logger.error(f"\n[FATAL ERROR] Simulation failed for config: {config}\n{traceback.format_exc()}")
+        raise e
     
 class BacktestService:
     def __init__(self, dic_data: Dict[str, pd.DataFrame], segments: Optional[List]):
@@ -66,8 +66,14 @@ class BacktestService:
     def run_parallel(self, lst_configs: List[Dict[str, Any]], cores: int):
         all_results = []
         with mp.Pool(processes=cores, initializer=_init_data, initargs=(self.dic_data, self.segments)) as pool:
-            for res in tqdm(pool.imap_unordered(_single_simulation, lst_configs, chunksize=10), 
-                            total=len(lst_configs), desc="Parallel Backtest"):
-                if res:
-                    all_results.extend(res)       
+            try:
+                for res in tqdm(pool.imap_unordered(_single_simulation, lst_configs, chunksize=10), 
+                                total=len(lst_configs), desc="Parallel Backtest"):
+                    if res:
+                        all_results.extend(res)
+            except Exception:
+                logger.critical("Parallel backtest aborted due to fatal error in worker process.")
+                pool.terminate()
+                pool.join()
+                raise
         return all_results

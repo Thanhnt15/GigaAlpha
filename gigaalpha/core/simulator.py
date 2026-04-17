@@ -50,36 +50,19 @@ class Simulator:
     def execute_pipeline(self, segments):
         try:
             self.compute_signal()
-        except Exception as e:
-            raise RuntimeError(f"Failed at compute_signal for strategy dict {self.report['strategy']}: {e}") from e
-
-        try:
             self.compute_position()
-        except Exception as e:
-            raise RuntimeError(f"Failed at compute_position for strategy {self.report['strategy']}: {e}") from e
-
-        try:
             self.compute_tvr_and_fee()
-        except Exception as e:
-            raise RuntimeError(f"Failed at compute_tvr_and_fee for strategy {self.report['strategy']}: {e}") from e
-
-        try:
             self.compute_profits()
-        except Exception as e:
-            raise RuntimeError(f"Failed at compute_profits for strategy {self.report['strategy']}: {e}") from e
-
-        try:
             df_1d_master = AlphaDomains.aggregate_to_1d(self.data)
-        except Exception as e:
-            raise RuntimeError(f"Failed at aggregate_to_1d for strategy {self.report['strategy']}: {e}") from e
-
-        reports = []
-        for segment in segments:
-            start, end = segment[0], segment[1]
-            try:
+            
+            reports = []
+            for segment in segments:
+                start, end = segment[0], segment[1]
                 report = self.compute_performance(df_1d_master, start, end)
                 report['segment'] = f'{start}_{end}'
                 reports.append(report)
-            except Exception as e:
-                raise RuntimeError(f"Failed at compute_performance for segment {start}_{end} (strategy {self.report['strategy']}): {e}") from e
-        return reports
+            return reports
+            
+        except Exception as e:
+            strategy_id = self.report.get('strategy', 'Unknown')
+            raise RuntimeError(f"Pipeline failure for strategy {strategy_id}: {e}") from e
