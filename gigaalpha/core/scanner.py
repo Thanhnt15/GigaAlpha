@@ -5,8 +5,8 @@ from typing import List, Dict, Any
 class ScanParams:
     @staticmethod
     def gen_all_params(alpha_name, gen_name, lst_frequency, lst_fee) -> List[Dict[str, Any]]:
-        alpha_params = ALPHA_REGISTRY[alpha_name]['param_ranges'] 
-        gen_params   = GEN_REGISTRY[gen_name]['param_ranges']     
+        alpha_params = ALPHA_REGISTRY[alpha_name]['param_range'] 
+        gen_params   = GEN_REGISTRY[gen_name]['param_range']     
 
         all_params = {
             'alpha_name': [alpha_name],   

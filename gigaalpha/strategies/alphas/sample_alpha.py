@@ -2,7 +2,7 @@ import pandas as pd
 from gigaalpha.core.registry import register_alpha
 from gigaalpha.core.operators import O
 
-@register_alpha(param_ranges={
+@register_alpha(param_range={
     'window': [1,2,3,4],
     'window_rank': list(range(10,101,10)),
 })

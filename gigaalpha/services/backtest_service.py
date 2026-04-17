@@ -21,8 +21,8 @@ def _single_simulation(config: Dict[str, Any], segments: Optional[List] = None):
     from gigaalpha.core.simulator import Simulator
     from gigaalpha.core.registry import ALPHA_REGISTRY, GEN_REGISTRY
     try:
-        alpha_keys = ALPHA_REGISTRY[config['alpha_name']]['param_ranges'].keys()
-        gen_keys = GEN_REGISTRY[config['gen_name']]['param_ranges'].keys()
+        alpha_keys = ALPHA_REGISTRY[config['alpha_name']]['param_range'].keys()
+        gen_keys = GEN_REGISTRY[config['gen_name']]['param_range'].keys()
         
         alpha_params = {k: config[k] for k in alpha_keys if k in config}
         gen_params = {k: config[k] for k in gen_keys if k in config}

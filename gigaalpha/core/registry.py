@@ -1,7 +1,7 @@
 ALPHA_REGISTRY = {}
 GEN_REGISTRY   = {}
 
-def register_alpha(param_ranges):
+def register_alpha(param_range):
     """
     Gắn lên trên hàm alpha để đăng ký vào sổ cái.
     """
@@ -11,14 +11,14 @@ def register_alpha(param_ranges):
 
         ALPHA_REGISTRY[name] = {
             "function":     func,
-            "param_ranges": param_ranges,
+            "param_range": param_range,
         }
         return func
 
     return decorator
 
 
-def register_gen(param_ranges):
+def register_gen(param_range):
     """
     Gắn lên trên hàm gen để đăng ký vào sổ cái.
     """
@@ -28,7 +28,7 @@ def register_gen(param_ranges):
 
         GEN_REGISTRY[name] = {
             "function":     func,
-            "param_ranges": param_ranges,
+            "param_range": param_range,
         }
         return func
 
