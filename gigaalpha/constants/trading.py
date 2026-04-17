@@ -9,3 +9,4 @@ SEGMENTS = [
 ]
 
 CHART_COLORS = ['#081d58', '#225ea8', '#41b6c4', '#7ed957', '#edf8b1']
+FEES = [0.175]

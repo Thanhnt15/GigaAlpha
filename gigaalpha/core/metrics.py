@@ -4,6 +4,7 @@ import logging
 from datetime import datetime
 from scipy.stats import skew, kurtosis
 from math import erf, sqrt
+from typing import Dict, Any
 
 logger = logging.getLogger(__name__)
 
@@ -147,3 +148,21 @@ class AlphaDomains:
             return 0.5 * (1 + erf(z / sqrt(2))) * 100
         except:
             return 0
+
+    @staticmethod
+    def apply_cut_time(DIC_FREQS: Dict[Any, pd.DataFrame], cut_time: str = '14:25:00'):
+        df_1m = DIC_FREQS[1]
+        df_1m = df_1m[df_1m['executionTime'] >= cut_time]
+        dict_cut_price = df_1m.groupby("day")['entryPrice'].first().to_dict()
+        for freq in DIC_FREQS.keys():
+            df = DIC_FREQS[freq].copy()
+            df['price_at_cutTime'] = df['day'].map(dict_cut_price)
+        
+            df.loc[df['executionTime'] >= cut_time, 'entryPrice'] = df['price_at_cutTime']
+            df['exitPrice'] = df['entryPrice'].shift(-1)
+            df['priceChange'] = df['exitPrice'] - df['entryPrice']
+            df.loc[df['executionTime'] == '14:45:00', 'priceChange'] = 0
+            
+            DIC_FREQS[freq] = df
+        return DIC_FREQS
+

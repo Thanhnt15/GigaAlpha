@@ -1,28 +1,26 @@
-import yaml, os, sys, logging
+import yaml, sys, logging
 from dataclasses import dataclass, field, fields
 from typing import List, Dict, Any, Type, Optional
 from pathlib import Path
 from dotenv import load_dotenv
+from gigaalpha.constants.trading import SEGMENTS, CHART_COLORS, FEES
 
-
-# Auto-load environment variables from .env
 load_dotenv()
-
-from gigaalpha.constants.trading import SEGMENTS
 
 logger = logging.getLogger(__name__)
 
 @dataclass
 class DataConfig:
     path: str = ""
-    segments: List[List[str]] = field(default_factory=list)
+    data_name: Optional[str] = None
+    segments: List[List[str]] = field(default_factory=SEGMENTS)
 
 @dataclass
 class BacktestConfig:
     alpha_name: str = ""
     gen_name: str = ""
     lst_frequency: List[float] = field(default_factory=lambda: list(range(10,101,1)))
-    lst_fee: List[float] = field(default_factory=list)
+    lst_fee: List[float] = field(default_factory=FEES)
     cores: int = 1
 
 @dataclass
@@ -39,7 +37,7 @@ class ComputeScoreConfig:
 class VisualizeConfig:
     enabled: bool = True
     output_dir: str = "outputs/html" 
-    chart_colors: List[str] = field(default_factory=lambda: ['#081d58', '#225ea8', '#41b6c4', '#7ed957', '#edf8b1'])
+    chart_colors: List[str] = field(default_factory=CHART_COLORS)
     cores: int = 1
 
 
@@ -48,7 +46,6 @@ class StorageConfig:
     enabled: bool = True
     output_dir: str = "outputs/excel"
     cores: int = 1
-
 
 @dataclass
 class UploadConfig:

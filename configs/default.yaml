@@ -1,12 +1,12 @@
 data:
-  path: "data/dic_freqs_alpha_base.pkl"
+  path: "data/sample_data.pickle"
+  data_name: "_time_series"
   segments: 
     - ["2022_01_01", "2026_01_01"]
     - ["2022_01_01", "2023_01_01"]
     - ["2023_01_01", "2024_01_01"]
     - ["2024_01_01", "2025_01_01"]
     - ["2025_01_01", "2026_01_01"]
-  cut_time: null
   
 backtest:
   alpha_name: "001"

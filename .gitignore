@@ -31,6 +31,10 @@ ENV/
 !configs/*.json
 !gigaalpha/strategies/**/*.json
 
+# Configs
+configs/*.yaml
+!configs/default.yaml
+
 # Project Data & Logs (Local only)
 data/*.pickle
 data/*.pkl

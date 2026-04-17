@@ -20,11 +20,9 @@ if __name__ == '__main__':
     
     setup_logging(enable_file_logging=pipeline_config.system_log.enabled)
     logger = logging.getLogger(__name__)
-    notifier = NotificationService()
     
     logger.info(f"Running Scan Pipeline with config: {args.config}")
     pipeline = ScanPipeline(pipeline_config)
-    
     try:
         total_time_str = "N/A"
         success_count, total_count = 0, 0
@@ -45,14 +43,15 @@ if __name__ == '__main__':
             
         total_time_str = f"{t.duration:.2f}m"
 
-        # Send success summary notification if pipeline completes
-        notifier.notify_success(
-            config=pipeline_config,
-            results_df=pipeline.results_df,
-            total_time=total_time_str,
-            success_count=success_count,
+        if pipeline_config.notification.enabled:
+            notifier = NotificationService()
+            notifier.notify_success(
+                config=pipeline_config,
+                results_df=pipeline.results_df,
+                total_time=total_time_str,
+                success_count=success_count,
             total_count=total_count
-        )
+        )   
 
     except Exception:
         logger.exception("Pipeline execution failed")

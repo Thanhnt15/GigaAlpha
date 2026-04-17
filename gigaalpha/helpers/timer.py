@@ -24,5 +24,5 @@ class Timer(ContextDecorator):
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         self.duration = (time.time() - self.start_time) / 60
-        logger.info(f"{self.task_name} duration: {self.duration:.4f} minutes\n")
+        logger.info(f"{self.task_name} duration: {self.duration:.4f} minutes")
         return False
