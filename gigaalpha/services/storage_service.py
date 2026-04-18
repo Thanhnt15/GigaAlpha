@@ -14,7 +14,7 @@ class StorageService:
         self.df = df.copy()
         self.output_path = output_path
     
-    def save_to_xlsx(self):
+    def save_to_xlsx(self, summary_df: pd.DataFrame = None):
         try:
             processed_df = sort_report_data(self.df)
             processed_df = rename_and_reorder_report_columns(processed_df)
@@ -22,7 +22,18 @@ class StorageService:
             os.makedirs(os.path.dirname(self.output_path), exist_ok=True)
             writer = pd.ExcelWriter(self.output_path, engine='xlsxwriter')
             processed_df.to_excel(writer, index=False, sheet_name='Report')
-            apply_excel_report_formatting(writer.book, writer.sheets['Report'], processed_df)
+            
+            if summary_df is not None:
+                segment_val = summary_df['Segment'].iloc[0] if 'Segment' in summary_df.columns else "Summary"
+                vertical_summary = summary_df.set_index('Segment').T.reset_index()
+                vertical_summary.columns = ['Metric', f'Value ({segment_val})']
+                
+                start_col = len(processed_df.columns) + 2
+                vertical_summary.to_excel(writer, index=False, sheet_name='Report', startcol=start_col)
+                
+                apply_excel_report_formatting(writer.book, writer.sheets['Report'], processed_df, summary_df=vertical_summary)
+            else:
+                apply_excel_report_formatting(writer.book, writer.sheets['Report'], processed_df)
 
             writer.close()
             logger.info(f"Excel report saved: {self.output_path} ({len(processed_df)} rows)")

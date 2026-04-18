@@ -7,7 +7,6 @@ import os
 logger = logging.getLogger(__name__)
 
 def sort_report_data(df: pd.DataFrame) -> pd.DataFrame:
-    """Sort rows based on backtest parameters."""
     df = df.copy()
     global_paras = ['frequency']
     alpha_params = sorted([c for c in df.columns if c.startswith('alpha_') and c != 'alpha_name'])
@@ -22,7 +21,6 @@ def sort_report_data(df: pd.DataFrame) -> pd.DataFrame:
     return df
 
 def rename_and_reorder_report_columns(df: pd.DataFrame) -> pd.DataFrame:
-    """Rename columns to reporting standards and reorder linearly."""
     mapping = {
         'strategy': 'Strategy',
         'frequency': 'Frequency',
@@ -63,12 +61,10 @@ def rename_and_reorder_report_columns(df: pd.DataFrame) -> pd.DataFrame:
     final_cols = [c for c in expected_order if c in df_new.columns]
     return df_new[final_cols]
 
-def apply_excel_report_formatting(workbook, worksheet, df: pd.DataFrame):
-    """Apply styles, column widths (sampling), and conditional formatting."""
+def apply_excel_report_formatting(workbook, worksheet, df: pd.DataFrame, summary_df: pd.DataFrame = None):
     num_rows = len(df)
     last_row = num_rows + 1
 
-    # Styles
     header_fmt = workbook.add_format({
         'bold': True, 'font_color': '#FFFFFF', 'bg_color': '#366092',
         'align': 'center', 'valign': 'vcenter', 'border': 1
@@ -77,18 +73,19 @@ def apply_excel_report_formatting(workbook, worksheet, df: pd.DataFrame):
         'align': 'center', 'valign': 'vcenter', 'border': 1
     })
 
-    # Column width optimization (1000 row sampling)
-    sample_rows = min(num_rows, 1000)
-    df_sample = df.head(sample_rows)
-    
     for i, col in enumerate(df.columns):
         worksheet.write(0, i, col, header_fmt)
-        
-        max_len = df_sample[col].astype(str).map(len).max()
-        max_len = max(max_len, len(str(col))) + 3
+        max_len = max(df[col].astype(str).map(len).max() if not df.empty else 0, len(str(col))) + 3
         worksheet.set_column(i, i, min(max_len, 50), data_fmt)
 
-    # 3-color and 2-color scales for key metrics
+    if summary_df is not None:
+        start_col = len(df.columns) + 2
+        for i, col in enumerate(summary_df.columns):
+            curr_col = start_col + i
+            worksheet.write(0, curr_col, col, header_fmt)
+            max_len = max(summary_df[col].astype(str).map(len).max() if not summary_df.empty else 0, len(str(col))) + 3
+            worksheet.set_column(curr_col, curr_col, min(max_len, 50), data_fmt)
+
     color_rules = {
         'Sharpe Ratio': {
             'type': '3_color_scale',

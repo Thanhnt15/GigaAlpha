@@ -15,8 +15,12 @@ from gigaalpha.helpers.timer import Timer
 PROJECT_ROOT = Path(__file__).parents[2]
 logger = logging.getLogger(__name__)
 
+def load_dic_data(config: PipelineConfig):
+    dic_data_path = PROJECT_ROOT / config.data.path
+    logger.info(f"Loading data from {dic_data_path}")
+    return pd.read_pickle(dic_data_path)
+
 def _visualize_and_storage_worker(task):
-    """Worker handles visualization and storage for a single segment."""
     segment, seg_df, config = task
     try:
         if config.visualize.enabled:
@@ -26,26 +30,34 @@ def _visualize_and_storage_worker(task):
             y = sorted([col for col in seg_df.columns if 'gen_' in col and col != 'gen_name'])[0]
 
             target_cols = [z, x, y]
+            data_tag = config.data.name
             output_dir = PROJECT_ROOT / config.visualize.output_dir
-            output_path_html = output_dir / f"3D_{config.backtest.alpha_name}_{config.backtest.gen_name}_{segment}.html"
+            output_path_html = output_dir / f"3D_{config.backtest.alpha_name}_{config.backtest.gen_name}_{segment}{data_tag}.html"
             visualizer.run_visualization(
-                title=f"Sharpe_3D: Alpha_{config.backtest.alpha_name} | Gen_{config.backtest.gen_name} | {segment}", 
+                title=f"3D: {config.backtest.alpha_name} | {config.backtest.gen_name} | {segment} | {data_tag}", 
                 target_cols=target_cols, 
                 colors=config.visualize.chart_colors, 
                 output_path=output_path_html
             )
         if config.storage.enabled:
+            data_tag = config.data.name
             output_dir = PROJECT_ROOT / config.storage.output_dir
-            output_path_excel = output_dir / f"alpha_{config.backtest.alpha_name}_{config.backtest.gen_name}_{segment}.xlsx"
+            output_path_excel = output_dir / f"{config.backtest.alpha_name}_{config.backtest.gen_name}_{segment}{data_tag}.xlsx"
             storage = StorageService(df=seg_df, output_path=output_path_excel)
-            storage.save_to_xlsx()
+            
+            summary_df = None
+            if config.storage.custom_stats_enabled:
+                stats_service = StatisticsService(df=seg_df)
+                summary_dict = stats_service.run_custom_statistics(segment, lst_n_profit=[100, 120, 150, 180, 210, 240, 270, 300, 450, 600, 1200])
+                summary_df = pd.DataFrame([summary_dict]) if summary_dict else None
+            
+            storage.save_to_xlsx(summary_df=summary_df)
 
     except Exception:
         logger.exception(f"Visualization/Storage failed for segment {segment}")
         return None
 
 def _upload_worker(task):
-    """Worker handles uploading a single generated file to Drive."""
     local_path, config = task
     try:
         if config.upload.enabled:
@@ -68,7 +80,6 @@ class ScanPipeline:
 
     @Timer("Core Backtest")
     def run_backtest(self):
-        """Generate configurations and run the core backtesting simulator in parallel."""
         logger.info("="*80)
         logger.info(f"Core backtest")
         dic_data_path = PROJECT_ROOT / self.config.data.path
@@ -92,7 +103,6 @@ class ScanPipeline:
 
     @Timer("Scoring Computation")
     def run_scoring(self):
-        """Calculate K-Neighbors Sharpe scores (if enabled)."""
         if self.results_df.empty or not self.config.compute_score.enabled:
             return
         logger.info("="*80)
@@ -111,7 +121,6 @@ class ScanPipeline:
 
     @Timer("Statistics Summary")
     def run_statistics(self):
-        """Aggregate performance statistics."""
         if self.results_df.empty:
             return
         logger.info("="*80)
@@ -150,7 +159,6 @@ class ScanPipeline:
 
     @Timer("Upload to drive")
     def run_upload_to_drive(self):
-        """Upload Excel reports to Google Drive in parallel."""
         if self.config.upload.enabled:      
             logger.info("="*80)
             logger.info(f"Uploading reports to Google Drive in parallel with {self.config.upload.cores} cores...")
@@ -160,8 +168,9 @@ class ScanPipeline:
                 return
             
             excel_files = []
+            data_tag = self.config.data.name
             for segment in self.results_df['segment'].unique():
-                fpath = target_dir / f"alpha_{self.config.backtest.alpha_name}_{self.config.backtest.gen_name}_{segment}.xlsx"
+                fpath = target_dir / f"{self.config.backtest.alpha_name}_{self.config.backtest.gen_name}_{segment}{data_tag}.xlsx"
                 if fpath.exists():
                     excel_files.append(str(fpath))
 

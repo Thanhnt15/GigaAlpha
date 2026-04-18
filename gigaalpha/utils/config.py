@@ -11,15 +11,23 @@ logger = logging.getLogger(__name__)
 
 @dataclass
 class DataConfig:
-    path: str = ""
-    segments: List[List[str]] = field(default_factory=SEGMENTS)
+    source: Dict[str, str] = field(default_factory=dict)
+    segments: List[List[str]] = field(default_factory=lambda: SEGMENTS)
+
+    @property
+    def path(self) -> str:
+        return list(self.source.values())[0] if self.source else ""
+
+    @property
+    def name(self) -> str:
+        return list(self.source.keys())[0] if self.source else ""
 
 @dataclass
 class BacktestConfig:
     alpha_name: str = ""
     gen_name: str = ""
     lst_frequency: List[float] = field(default_factory=lambda: list(range(10,101,1)))
-    lst_fee: List[float] = field(default_factory=FEES)
+    lst_fee: List[float] = field(default_factory=lambda: FEES)
     cores: int = 1
 
 @dataclass
@@ -36,7 +44,7 @@ class ComputeScoreConfig:
 class VisualizeConfig:
     enabled: bool = True
     output_dir: str = "outputs/html" 
-    chart_colors: List[str] = field(default_factory=CHART_COLORS)
+    chart_colors: List[str] = field(default_factory=lambda: CHART_COLORS)
     cores: int = 1
 
 
@@ -45,6 +53,7 @@ class StorageConfig:
     enabled: bool = True
     output_dir: str = "outputs/excel"
     cores: int = 1
+    custom_stats_enabled: bool = True
 
 @dataclass
 class UploadConfig:

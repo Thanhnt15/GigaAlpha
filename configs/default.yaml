@@ -1,5 +1,6 @@
 data:
-  path: "data/sample_data.pickle"
+  source:
+    "": "data/sample_data.pickle"
   segments: 
     - ["2022_01_01", "2026_01_01"]
     - ["2022_01_01", "2023_01_01"]
@@ -31,6 +32,7 @@ visualize:
 storage:
   enabled: false
   output_dir: "outputs/excel"
+  custom_stats_enabled: false 
   cores: 13
 
 upload:
