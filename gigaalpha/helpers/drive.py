@@ -170,7 +170,7 @@ class GDrive:
                 except Exception as e:
                     logger.warning(f"[GDrive] Permission configuration error: {e}")
                 
-                logger.info(f"[GDrive] Successfully uploaded: {full_path}")
+                logger.info(f"[GDrive] Successfully uploaded: {new_link}")
                 success_links[fname] = new_link
             else:
                 logger.error(f"[GDrive] Failed to upload: {full_path}")

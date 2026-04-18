@@ -36,7 +36,7 @@ def calc_custom_segment_metrics(
     segment_col: str = 'segment',
     sharpe_col: str = 'sharpe',
     profit_col: str = 'netProfit',
-    mdd_col: str = 'mdd',
+    mdd_col: str = 'mddPct',
     tvr_col: str = 'tvr'
 ) -> Optional[Dict[str, Any]]:
     if df.empty or segment_col not in df.columns:
