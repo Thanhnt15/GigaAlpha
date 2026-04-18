@@ -10,6 +10,18 @@ class O:
     #     wma = WMA(df,timeperiod=window)
     #     return wma
     @staticmethod
+    def compute_vwap(df, window=200):
+        df['average_price'] = (df['low'] + df['close'] + df['open'] + df['high'])/4
+        df['vwap'] = \
+        (
+            df['average_price']
+            *
+            df['matchingVolume']
+        ).rolling(window).sum() \
+        /  \
+        df['matchingVolume'].rolling(window).sum()
+        return df
+    @staticmethod
     def calculate_rsi(series: pd.Series, d: int = 14) -> pd.Series:
         """Tính chỉ số sức mạnh tương đối (RSI)."""
         delta = series.diff()
