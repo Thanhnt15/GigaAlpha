@@ -5,7 +5,6 @@ import numpy as np
 import pandas as pd
 from typing import Dict, List, Optional, Any
 from functools import partial
-
 from gigaalpha.utils.scoring import compute_scores
 
 logger = logging.getLogger(__name__)
@@ -18,25 +17,42 @@ class ScoringService:
         self.col_target = col_target
         self.col_strategy = col_strategy
 
-        # Chuẩn bị dữ liệu phục vụ tính toán
-        self.sharpe_map = dict(zip(df[self.col_strategy].str.strip(), df[self.col_target]))
-        strategy_matrix = df[self.col_strategy].str.strip().str.split('_', expand=True)
-        params_count = strategy_matrix.shape[1]
+        self.strategy_norm = df[self.col_strategy].apply(self._normalize_id)
+        self.sharpe_map = dict(zip(self.strategy_norm.str.strip(), df[self.col_target]))
+        
+        matrix = self.strategy_norm.str.strip().str.split('_', expand=True)
+        params_count = matrix.shape[1]
         
         self.dim_values = {}
         self.dim_value_to_idx = {}
         for i in range(params_count):
-            vals = sorted(strategy_matrix[i].unique(), key=lambda x: float(x))
+            vals = sorted(matrix[i].unique(), key=lambda x: float(x) if x is not None else 0.0)
             self.dim_values[i] = vals
             self.dim_value_to_idx[i] = {v: idx for idx, v in enumerate(vals)}
+
+    @staticmethod
+    def _normalize_id(strategy_id: str) -> str:
+        parts = str(strategy_id).split('_')
+        new_parts = []
+        for p in parts:
+            p = p.strip()
+            if p.startswith('(') and p.endswith(')'):
+                inner = p[1:-1].replace(' ', '')
+                new_parts.extend(inner.split(','))
+            else:
+                new_parts.append(p)
+        return "_".join(new_parts)
 
     def run_sequential(self):
         time_start = time.time()
         logger.info("Running scoring sequentially")
         
+        df = self.df.copy()
+        df[self.col_strategy] = self.strategy_norm
+
         try:
             flat_results = compute_scores(
-                chunk_df=self.df,
+                chunk_df=df,
                 sharpe_map=self.sharpe_map,
                 dim_values=self.dim_values,
                 dim_value_to_idx=self.dim_value_to_idx,
@@ -50,8 +66,7 @@ class ScoringService:
             logger.exception("Scoring failed in sequential mode")
             return self.df
             
-        elapsed = (time.time() - time_start) / 60
-        logger.info(f"Sequential score computation completed in {elapsed:.2f} mins")
+        logger.info(f"Sequential computation completed in {(time.time() - time_start) / 60:.2f} mins")
         return pd.concat([self.df, df_results], axis=1)
 
     def run_parallel(self, cores: int = 10):
@@ -60,7 +75,10 @@ class ScoringService:
             return self.run_sequential()
 
         time_start = time.time()
-        df_chunks = [self.df.iloc[idx] for idx in np.array_split(np.arange(len(self.df)), num_chunks)]
+        
+        df = self.df.copy()
+        df[self.col_strategy] = self.strategy_norm
+        df_chunks = [df.iloc[idx] for idx in np.array_split(np.arange(len(df)), num_chunks)]
 
         worker_func = partial(
             compute_scores, 
@@ -83,4 +101,5 @@ class ScoringService:
             logger.exception("Scoring failed in parallel mode")
             return self.df
         
+        logger.info(f"Parallel computation completed in {(time.time() - time_start) / 60:.2f} mins")
         return pd.concat([self.df, df_results], axis=1)
