@@ -75,7 +75,7 @@ def apply_excel_report_formatting(workbook, worksheet, df: pd.DataFrame, summary
 
     for i, col in enumerate(df.columns):
         worksheet.write(0, i, col, header_fmt)
-        max_len = max(df[col].astype(str).map(len).max() if not df.empty else 0, len(str(col))) + 3
+        max_len = max(df[col].astype(str).map(len).max() if not df.empty else 0, len(str(col))) + 1
         worksheet.set_column(i, i, min(max_len, 50), data_fmt)
 
     if summary_df is not None:
@@ -83,7 +83,7 @@ def apply_excel_report_formatting(workbook, worksheet, df: pd.DataFrame, summary
         for i, col in enumerate(summary_df.columns):
             curr_col = start_col + i
             worksheet.write(0, curr_col, col, header_fmt)
-            max_len = max(summary_df[col].astype(str).map(len).max() if not summary_df.empty else 0, len(str(col))) + 3
+            max_len = max(summary_df[col].astype(str).map(len).max() if not summary_df.empty else 0, len(str(col))) + 1
             worksheet.set_column(curr_col, curr_col, min(max_len, 50), data_fmt)
 
     color_rules = {
