@@ -26,8 +26,8 @@ def _visualize_and_storage_worker(task):
         if config.visualize.enabled:
             visualizer = VisualizationService(df=seg_df)
             z = 'sharpe'
-            x = sorted([col for col in seg_df.columns if 'alpha_' in col and col != 'alpha_name'])[0]
-            y = sorted([col for col in seg_df.columns if 'gen_' in col and col != 'gen_name'])[0]
+            x = next((col for col in sorted(seg_df.columns) if 'alpha_' in col and col != 'alpha_name'), 'frequency')
+            y = next(col for col in sorted(seg_df.columns) if 'gen_' in col and col != 'gen_name')
 
             target_cols = [z, x, y]
             data_tag = config.data.name
