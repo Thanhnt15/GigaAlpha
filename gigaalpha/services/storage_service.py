@@ -14,7 +14,7 @@ class StorageService:
         self.df = df.copy()
         self.output_path = output_path
     
-    def save_to_xlsx(self, summary_df: pd.DataFrame = None):
+    def save_to_xlsx(self, summary_df: pd.DataFrame = None, sharpe_stats_df: pd.DataFrame = None):
         try:
             processed_df = sort_report_data(self.df)
             processed_df = rename_and_reorder_report_columns(processed_df)
@@ -23,17 +23,23 @@ class StorageService:
             writer = pd.ExcelWriter(self.output_path, engine='xlsxwriter')
             processed_df.to_excel(writer, index=False, sheet_name='Report')
             
+            next_col = len(processed_df.columns) + 1 # 1 column gap from main data
+
             if summary_df is not None:
-                segment_val = summary_df['Segment'].iloc[0] if 'Segment' in summary_df.columns else "Summary"
-                vertical_summary = summary_df.set_index('Segment').T.reset_index()
-                vertical_summary.columns = ['Metric', f'Value ({segment_val})']
-                
-                start_col = len(processed_df.columns) + 2
-                vertical_summary.to_excel(writer, index=False, sheet_name='Report', startcol=start_col)
-                
-                apply_excel_report_formatting(writer.book, writer.sheets['Report'], processed_df, summary_df=vertical_summary)
-            else:
-                apply_excel_report_formatting(writer.book, writer.sheets['Report'], processed_df)
+                summary_df.to_excel(writer, index=False, sheet_name='Report', startcol=next_col)
+                next_col += len(summary_df.columns)
+            
+            if sharpe_stats_df is not None:
+                sharpe_stats_df.to_excel(writer, index=True, sheet_name='Report', startcol=next_col)
+            
+            # Apply formatting with all pieces
+            apply_excel_report_formatting(
+                writer.book, 
+                writer.sheets['Report'], 
+                processed_df, 
+                summary_df=summary_df,
+                sharpe_stats_df=sharpe_stats_df
+            )
 
             writer.close()
             logger.info(f"Excel report saved: {self.output_path} ({len(processed_df)} rows)")

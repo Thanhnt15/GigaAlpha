@@ -18,9 +18,7 @@ SEGMENTS = [
 
 if __name__ == "__main__":
     dic_data = pd.read_pickle(DATA_PATH)
-    print(dic_data[100])
-    exit()
-
+    
     svc = BacktestMegaService(
         dic_data=dic_data,
         segments=SEGMENTS,
