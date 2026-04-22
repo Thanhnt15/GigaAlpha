@@ -10,5 +10,6 @@ def gen_sample(signal: pd.Series, threshold=0.3, half_life=0) -> pd.Series:
     if half_life > 0:
         signal = signal.ewm(halflife=half_life).mean()
     position = pd.Series(np.nan, index=signal.index)
-    position
+    position.loc[signal > threshold] = 1
+    position.loc[signal < -threshold] = -1
     return position
