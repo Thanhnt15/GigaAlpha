@@ -14,12 +14,12 @@ logging.Formatter.converter = System.vn_time_converter
 logger = logging.getLogger(__name__)
 
 DATA_PATH = PROJECT_ROOT / "data/dic_freqs.pickle"
-SEGMENTS = [["2018_01_01", "2020_01_01"]]
+SEGMENTS = [["2018_01_01", "2025_09_08"]]
 LST_CONFIGS = [
     {
-        'alpha_name': 'popbo_003', 'window': 3, 'window_rank': 30, 
-        'gen_name': '1_1', 'threshold': 0.2, 'half_life': 0.4,
-        'frequency': 38, 'fee': 0.175,
+        'frequency': 10, 'fee': 0.175,
+        'alpha_name': 'popbo_003', 'window': 1, 'window_rank': 10, 
+        'gen_name': '1_1', 'half_life': 0, 'threshold': 0.1, 
     }
 ]
 

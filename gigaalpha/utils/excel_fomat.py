@@ -11,8 +11,8 @@ def sort_report_data(df: pd.DataFrame) -> pd.DataFrame:
     gen_params = sorted([c for c in df.columns if c.startswith('gen_') and c != 'gen_name'])
     
     sort_priority = [c for c in global_paras if c in df.columns]
-    sort_priority.extend(alpha_params)
     sort_priority.extend(gen_params)
+    sort_priority.extend(alpha_params)
     
     if sort_priority:
         df = df.sort_values(by=sort_priority, ascending=True).reset_index(drop=True)
@@ -51,8 +51,8 @@ def rename_and_reorder_report_columns(df: pd.DataFrame) -> pd.DataFrame:
         perf_cols + 
         score_cols + 
         base_param_col + 
-        alpha_cols + 
         gen_cols + 
+        alpha_cols + 
         strategy_col 
     )
     
