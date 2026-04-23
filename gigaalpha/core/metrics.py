@@ -95,21 +95,21 @@ class AlphaDomains:
             hhi = ((winning_profits / (total_profit + 1e-9)) ** 2).sum()
 
             new_report = {
-                'sharpe': round(sharpe, 3),
-                "hhi": round(hhi, 3),
-                "psr": round(AlphaDomains.dsr(returns, daily_sharpe, 0), 3),
-                "dsr": round(AlphaDomains.dsr(returns, daily_sharpe), 3),
-                'mdd': round(mdd, 3),
-                'mddPct': round(mdd_pct.iloc[-1], 4),
-                'cdd': round(cdd, 3),
-                'cddPct': round(cdd_pct.iloc[-1], 4),
-                'ppc': round(ppc, 4),
-                'tvr': round(tvr, 4),
+                'sharpe': float(round(sharpe, 3)),
+                "hhi": float(round(hhi, 3)),
+                "psr": float(round(AlphaDomains.dsr(returns, daily_sharpe, 0), 3)),
+                "dsr": float(round(AlphaDomains.dsr(returns, daily_sharpe), 3)),
+                'mdd': float(round(mdd, 3)),
+                'mddPct': float(round(mdd_pct.iloc[-1], 4)),
+                'cdd': float(round(cdd, 3)),
+                'cddPct': float(round(cdd_pct.iloc[-1], 4)),
+                'ppc': float(round(ppc, 4)),
+                'tvr': float(round(tvr, 4)),
                 'start': df_1d.index[0],
                 'end': df_1d.index[-1],
-                'lastProfit': round(df_1d['netProfit'].iloc[-1], 2),
-                "netProfit": round(df_1d['netProfit'].sum(), 2),
-                "profitPct": round(df_1d['netProfit'].sum(), 2) / equity * 100,
+                'lastProfit': float(round(df_1d['netProfit'].iloc[-1], 2)),
+                "netProfit": float(round(df_1d['netProfit'].sum(), 2)),
+                "profitPct": float(round(df_1d['netProfit'].sum(), 2) / equity * 100),
             }
             return new_report
         except Exception as e:
