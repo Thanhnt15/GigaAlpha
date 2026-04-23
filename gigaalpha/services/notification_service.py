@@ -28,10 +28,10 @@ class NotificationService:
 
         # Calculate unique configurations tested (regardless of segments)
         num_configs = results_df['strategy'].nunique() if not results_df.empty else 0
-
+        data_name = config.data.name.lstrip('_') or 'future'
         message = (
             f"✅ <b>Scan Success</b>\n"
             f"Alpha: {config.backtest.alpha_name} | Gen: {config.backtest.gen_name} | Configs: {num_configs}\n"
-            f"Time: {total_time} | Upload: {upload_ratio}"
+            f"Data: {data_name} | Time: {total_time} | Upload: {upload_ratio}"
         )
         self.bot.send_message(message)
