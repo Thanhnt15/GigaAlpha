@@ -12,8 +12,8 @@ class StatisticsService:
     def run_statistics(self, segment_val: str) -> Optional[Dict[str, Any]]:
         return calc_sharpe_tvr_summary(self.df, segment_val)
 
-    def run_custom_statistics(self, lst_n_profit: List[float] = [5, 10, 20]) -> Optional[pd.DataFrame]:
+    def run_custom_statistics(self, lst_n_profit: List[float]) -> Optional[pd.DataFrame]:
         return calc_custom_statistics(self.df, lst_n_profit)
         
-    def run_sharpe_stats_by_freq(self, lst_sharpe_threshold: List[float] = [1, 2, 3]) -> Optional[Dict[str, Any]]:
+    def run_sharpe_stats_by_freq(self, lst_sharpe_threshold: List[float]) -> Optional[Dict[str, Any]]:
         return sharpe_stats_by_freq(self.df, lst_sharpe_threshold=lst_sharpe_threshold)

@@ -52,7 +52,7 @@ def _visualize_and_storage_worker(task):
                 summary_list = stats_service.run_custom_statistics(lst_n_profit=[100, 120, 150, 180, 210, 240, 270, 300, 450, 600, 1200])
                 summary_df = pd.DataFrame(summary_list) if summary_list else None
 
-                sharpe_stats_df = stats_service.run_sharpe_stats_by_freq(lst_sharpe_threshold=[1, 2, 3])
+                sharpe_stats_df = stats_service.run_sharpe_stats_by_freq(lst_sharpe_threshold=[0, 1, 2])
             storage.save_to_xlsx(summary_df=summary_df, sharpe_stats_df=sharpe_stats_df)
 
     except Exception:

@@ -1,8 +1,6 @@
 import pandas as pd
-import numpy as np
 import logging
 from xlsxwriter.utility import xl_col_to_name
-import os
 
 logger = logging.getLogger(__name__)
 
@@ -79,53 +77,6 @@ def apply_excel_report_formatting(workbook, worksheet, df: pd.DataFrame, summary
     f_grn = workbook.add_format({'bg_color': '#63BE7B', 'border': 1, 'align': 'center'})
 
     # 1. Main Report Formatting
-    for i, col in enumerate(df.columns):
-        worksheet.write(0, i, col, header_fmt)
-        for r, val in enumerate(df[col]):
-            worksheet.write(r + 1, i, val, data_fmt)
-        max_len = max(df[col].astype(str).map(len).max() if not df.empty else 0, len(str(col))) + 1
-        worksheet.set_column(i, i, min(max_len, 50))
-
-    next_col = len(df.columns)
-
-    # 2. Vertical Summary Formatting (Row-based Coloring)
-    if summary_df is not None:
-        for i, col in enumerate(summary_df.columns):
-            curr_col = next_col + i
-            worksheet.write(0, curr_col, col, header_fmt)
-            for r, val in enumerate(summary_df[col]):
-                fmt = data_fmt
-                if col == 'Value':
-                    metric = str(summary_df.iloc[r]['Metric'])
-                    if any(x in metric for x in ['NetProfit > 0', 'Sharpe > 1']):
-                        try:
-                            p = float(str(val).split('(')[1].split('%')[0])
-                            fmt = f_red if p < 40 else (f_yel if p < 70 else f_grn)
-                        except: pass
-                worksheet.write(r + 1, curr_col, val, fmt)
-            
-            max_len = max(summary_df[col].astype(str).map(len).max() if not summary_df.empty else 0, len(str(col))) + 1
-            worksheet.set_column(curr_col, curr_col, min(max_len, 50))
-        next_col += len(summary_df.columns)
-
-    # 3. Sharpe Stats Formatting (Column-based Coloring)
-    if sharpe_stats_df is not None:
-        temp_df = sharpe_stats_df.reset_index()
-        for i, col in enumerate(temp_df.columns):
-            curr_col = next_col + i
-            worksheet.write(0, curr_col, col, header_fmt)
-            for r, val in enumerate(temp_df[col]):
-                fmt = data_fmt
-                if 'sharpe > 1' in str(col).lower():
-                    try:
-                        p = float(str(val).split('(')[1].split('%')[0])
-                        fmt = f_red if p < 40 else (f_yel if p < 70 else f_grn)
-                    except: pass
-                worksheet.write(r + 1, curr_col, val, fmt)
-            
-            max_len = max(temp_df[col].astype(str).map(len).max() if not temp_df.empty else 0, len(str(col))) + 1
-            worksheet.set_column(curr_col, curr_col, min(max_len, 50))
-
     color_rules = {
         'Sharpe Ratio': {
             'type': '3_color_scale',
@@ -162,9 +113,56 @@ def apply_excel_report_formatting(workbook, worksheet, df: pd.DataFrame, summary
             'min_type': 'num', 'min_value': 0, 'max_type': 'num', 'max_value': 1
         }
     }
-
     for i, col in enumerate(df.columns):
+        worksheet.write(0, i, col, header_fmt)
+        for r, val in enumerate(df[col]):
+            worksheet.write(r + 1, i, val, data_fmt)
+        max_len = max(df[col].astype(str).map(len).max() if not df.empty else 0, len(str(col))) + 1
+        worksheet.set_column(i, i, min(max_len, 50))
         if col in color_rules:
-            col_name = xl_col_to_name(i)
-            range_str = f"{col_name}2:{col_name}{last_row}"
-            worksheet.conditional_format(range_str, color_rules[col])
+            worksheet.conditional_format(f"{xl_col_to_name(i)}2:{xl_col_to_name(i)}{last_row}", color_rules[col])
+
+    next_col = len(df.columns)
+
+    # 2. Vertical Summary Formatting (Row-based Coloring)
+    if summary_df is not None:
+        for i, col in enumerate(summary_df.columns):
+            curr_col = next_col + i
+            worksheet.write(0, curr_col, col, header_fmt)
+            for r, val in enumerate(summary_df[col]):
+                fmt = data_fmt
+                if col == 'Value':
+                    metric = str(summary_df.iloc[r]['Metric'])
+                    try:
+                        if 'sharpe > 0' in metric:
+                            p = float(str(val).split('(')[1].split('%')[0])
+                            fmt = f_red if p < 60 else (f_yel if p < 80 else f_grn)
+                        elif 'sharpe > 1' in metric:
+                            p = float(str(val).split('(')[1].split('%')[0])
+                            fmt = f_red if p < 30 else (f_yel if p < 50 else f_grn)
+                    except: pass
+                worksheet.write(r + 1, curr_col, val, fmt)
+            max_len = max(summary_df[col].astype(str).map(len).max() if not summary_df.empty else 0, len(str(col))) + 1
+            worksheet.set_column(curr_col, curr_col, min(max_len, 50))
+        next_col += len(summary_df.columns)
+
+    # 3. Sharpe Stats Formatting (Column-based Coloring)
+    if sharpe_stats_df is not None:
+        temp_df = sharpe_stats_df.reset_index()
+        for i, col in enumerate(temp_df.columns):
+            curr_col = next_col + i
+            worksheet.write(0, curr_col, col, header_fmt)
+            for r, val in enumerate(temp_df[col]):
+                fmt = data_fmt
+                try:
+                    if 'sharpe > 0' in str(col).lower():
+                        p = float(str(val).split('(')[1].split('%')[0])
+                        fmt = f_red if p < 60 else (f_yel if p < 80 else f_grn)
+                    elif 'sharpe > 1' in str(col).lower():
+                        p = float(str(val).split('(')[1].split('%')[0])
+                        fmt = f_red if p < 30 else (f_yel if p < 50 else f_grn)
+                except: pass
+                worksheet.write(r + 1, curr_col, val, fmt)
+            max_len = max(temp_df[col].astype(str).map(len).max() if not temp_df.empty else 0, len(str(col))) + 1
+            worksheet.set_column(curr_col, curr_col, min(max_len, 50))
+

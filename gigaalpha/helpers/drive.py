@@ -39,33 +39,35 @@ class GDrive:
 
     @staticmethod
     def _get_service(token_path: str) -> Optional[Resource]:
-        """Initialize a universal Service with automatic refresh mechanism."""
         if not os.path.exists(token_path):
             logger.error(f"[GDrive] Token file not found at: {token_path}")
             return None
         
         try:
-            creds = None
-            # Try to load as authorized user file (json)
-            try:
-                creds = Credentials.from_authorized_user_file(token_path, GDrive.SCOPES)
-            except:
-                # If failed, try to load as pickle
-                with open(token_path, 'rb') as f:
-                    creds = pickle.load(f)
+            from filelock import FileLock
+            with FileLock(f"{token_path}.lock", timeout=120):
+                creds = None
+                try:
+                    creds = Credentials.from_authorized_user_file(token_path, GDrive.SCOPES)
+                except:
+                    try:
+                        with open(token_path, 'rb') as f:
+                            creds = pickle.load(f)
+                    except EOFError:
+                        logger.error(f"[GDrive] Token file is corrupted: {token_path}")
+                        return None
 
-            if not creds or not creds.valid:
-                if creds and creds.expired and creds.refresh_token:
-                    logger.debug("[GDrive] Token expired, automatically refreshing...")
-                    creds.refresh(Request())
-                    # Save the refreshed token
-                    if token_path.endswith('.json'):
-                        with open(token_path, 'w') as f: f.write(creds.to_json())
-                    else:
-                        with open(token_path, 'wb') as f: pickle.dump(creds, f)
+                if not creds or not creds.valid:
+                    if creds and creds.expired and creds.refresh_token:
+                        logger.debug("[GDrive] Token expired, automatically refreshing...")
+                        creds.refresh(Request())
+                        if token_path.endswith('.json'):
+                            with open(token_path, 'w') as f: f.write(creds.to_json())
+                        else:
+                            with open(token_path, 'wb') as f: pickle.dump(creds, f)
 
-            socket.setdefaulttimeout(600)
-            return build('drive', 'v3', credentials=creds, static_discovery=False)
+                socket.setdefaulttimeout(600)
+                return build('drive', 'v3', credentials=creds, static_discovery=False)
         except Exception as e:
             logger.error(f"[GDrive] Service initialization failed: {e}")
             return None

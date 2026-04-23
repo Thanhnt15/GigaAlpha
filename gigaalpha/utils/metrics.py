@@ -73,7 +73,7 @@ def sharpe_stats_by_freq(
     df: pd.DataFrame, 
     freq_col: str = 'frequency', 
     shrape_col: str = 'sharpe',
-    lst_sharpe_threshold: List[float] = [1, 2, 3],
+    lst_sharpe_threshold: List[float] = [0, 1, 2],
     tvr_col: str = 'tvr'
 ) -> Optional[Dict[str, Any]]:
     df = df[df[tvr_col] > 0]
