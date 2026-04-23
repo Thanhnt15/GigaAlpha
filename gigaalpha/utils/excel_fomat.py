@@ -134,10 +134,10 @@ def apply_excel_report_formatting(workbook, worksheet, df: pd.DataFrame, summary
                 if col == 'Value':
                     metric = str(summary_df.iloc[r]['Metric'])
                     try:
-                        if 'sharpe > 0' in metric:
+                        if 'NetProfit > 0' in metric:
                             p = float(str(val).split('(')[1].split('%')[0])
                             fmt = f_red if p < 60 else (f_yel if p < 80 else f_grn)
-                        elif 'sharpe > 1' in metric:
+                        elif 'Sharpe > 1' in metric:
                             p = float(str(val).split('(')[1].split('%')[0])
                             fmt = f_red if p < 30 else (f_yel if p < 50 else f_grn)
                     except: pass
