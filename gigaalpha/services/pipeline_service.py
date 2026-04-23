@@ -15,11 +15,6 @@ from gigaalpha.helpers.timer import Timer
 PROJECT_ROOT = Path(__file__).parents[2]
 logger = logging.getLogger(__name__)
 
-def load_dic_data(config: PipelineConfig):
-    dic_data_path = PROJECT_ROOT / config.data.path
-    logger.info(f"Loading data from {dic_data_path}")
-    return pd.read_pickle(dic_data_path)
-
 def _visualize_and_storage_worker(task):
     segment, seg_df, config = task
     try:
