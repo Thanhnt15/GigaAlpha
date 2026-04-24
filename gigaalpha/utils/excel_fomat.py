@@ -116,6 +116,8 @@ def apply_excel_report_formatting(workbook, worksheet, df: pd.DataFrame, summary
     for i, col in enumerate(df.columns):
         worksheet.write(0, i, col, header_fmt)
         for r, val in enumerate(df[col]):
+            if isinstance(val, (tuple, list, dict)):
+                val = str(val)
             worksheet.write(r + 1, i, val, data_fmt)
         max_len = max(df[col].astype(str).map(len).max() if not df.empty else 0, len(str(col))) + 1
         worksheet.set_column(i, i, min(max_len, 50))
