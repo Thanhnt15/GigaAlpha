@@ -45,7 +45,7 @@ class MegaSimulator:
 
     def compute_component_position(self):
         self.all_positions = []
-        ref_idx = self.dic_data[list(self.dic_data.keys())[0]].index
+        ref_idx = self.dic_data[1].index
         
         for sid in self.strategy_ids:
             freq, a_p, g_p = MegaSimulator._parse_id(sid, self.alpha_name, self.gen_name)
@@ -78,7 +78,7 @@ class MegaSimulator:
 
 if __name__ == "__main__":
     dic_data = pd.read_pickle('/home/ubuntu/GigaAlpha/data/dic_freqs.pickle')
-    segments = [["2022_06_02", "2025_12_31"]]
+    segments = [["2022_06_02", "2023_06_01"]]
     LST_STRATEGY = [
         '28_135_0.7_0.2',
         '31_45_0.4_0.2',

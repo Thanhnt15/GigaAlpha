@@ -7,10 +7,10 @@ GEN_REGISTRY   = {}
 
 def register_alpha(param_range):
     """
-    Gắn lên trên hàm alpha để đăng ký vào sổ cái.
+    Decorator to register an alpha function into the registry.
     """
     def decorator(func):
-        # Lấy tên ngắn: "alpha_001" -> "001"
+        # Get short name: "alpha_001" -> "001"
         name = func.__name__.replace("alpha_", "")
 
         if name in ALPHA_REGISTRY:
@@ -33,10 +33,10 @@ def register_alpha(param_range):
 
 def register_gen(param_range):
     """
-    Gắn lên trên hàm gen để đăng ký vào sổ cái.
+    Decorator to register a gen function into the registry.
     """
     def decorator(func):
-        # Lấy tên ngắn: "gen_1_1" -> "1_1"
+        # Get short name: "gen_1_1" -> "1_1"
         name = func.__name__.replace("gen_", "")
 
         if name in GEN_REGISTRY:
