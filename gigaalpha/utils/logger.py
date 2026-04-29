@@ -95,7 +95,7 @@ def setup_logging(enable_file_logging=True):
     
     if enable_file_logging:
         log_dir.mkdir(exist_ok=True)
-        cleanup_old_logs(log_dir, max_days=14)
+        cleanup_old_logs(log_dir, max_days=7)
     
     if not logging.getLogger().handlers:
         from gigaalpha.helpers.system import System
