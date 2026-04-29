@@ -25,14 +25,14 @@ class MegaSimulator:
     @staticmethod
     def _parse_id(strategy_id, alpha_name, gen_name):
         parts = strategy_id.split("_")
-        frequency = int(parts[0])
+        frequency = float(parts[0]) if "." in parts[0] else int(parts[0])
 
-        alpha_keys = sorted(ALPHA_REGISTRY[alpha_name]['param_range'].keys())
         gen_keys = sorted(GEN_REGISTRY[gen_name]['param_range'].keys())
+        alpha_keys = sorted(ALPHA_REGISTRY[alpha_name]['param_range'].keys())
 
         params = {}
         idx = 1
-        for keys in [alpha_keys, gen_keys]:
+        for keys in [gen_keys, alpha_keys]:
             for key in keys:
                 val = parts[idx]
                 if '(' in val and ')' in val:
@@ -41,18 +41,20 @@ class MegaSimulator:
                     val = float(val) if '.' in val else int(val)
                 params[key] = val
                 idx += 1
-        return frequency, {k: params[k] for k in alpha_keys}, {k: params[k] for k in gen_keys}
+        
+        g_p = {k: params[k] for k in gen_keys}
+        a_p = {k: params[k] for k in alpha_keys}
+        return frequency, g_p, a_p
 
     def compute_component_position(self):
         self.all_positions = []
         ref_idx = self.dic_data[1].index
         
         for sid in self.strategy_ids:
-            freq, a_p, g_p = MegaSimulator._parse_id(sid, self.alpha_name, self.gen_name)
+            freq, g_p, a_p = MegaSimulator._parse_id(sid, self.alpha_name, self.gen_name)
             sim = Simulator(self.dic_data[freq], freq, self.alpha_name, a_p, self.gen_name, g_p, self.fee)
             sim.compute_signal()
             sim.compute_position()
-        
             pos = sim.data['position'].reindex(ref_idx).ffill().fillna(0)
             self.all_positions.append(pos)
         return self.all_positions
@@ -78,13 +80,11 @@ class MegaSimulator:
 
 if __name__ == "__main__":
     dic_data = pd.read_pickle('/home/ubuntu/GigaAlpha/data/dic_freqs.pickle')
-    segments = [["2022_06_02", "2023_06_01"]]
+    segments = [["2018_01_01", "2020_01_01"]]
     LST_STRATEGY = [
-        '28_135_0.7_0.2',
-        '31_45_0.4_0.2',
-        '31_95_0.0_0.3'
+        '10_0.0_0.1_5'
     ]
-    mega = MegaSimulator(dic_data, '005', '1_1', LST_STRATEGY)
+    mega = MegaSimulator(dic_data, '064', '1_1', LST_STRATEGY)
     mega.compute_component_position()
     mega.compute_mega_position()
     mega.compute_tvr_and_fee()

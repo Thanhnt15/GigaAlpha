@@ -1,6 +1,7 @@
 import yaml, sys, logging
+import numpy as np  
 from dataclasses import dataclass, field, fields
-from typing import List, Dict, Any, Type, Optional
+from typing import List, Dict, Any, Type, Optional, Union
 from pathlib import Path
 from dotenv import load_dotenv
 from gigaalpha.constants.trading import SEGMENTS, CHART_COLORS, FEES
@@ -26,9 +27,22 @@ class DataConfig:
 class BacktestConfig:
     alpha_name: str = ""
     gen_name: str = ""
-    lst_frequency: List[float] = field(default_factory=lambda: list(range(10,101,1)))
+    lst_frequency: List[Union[int, float]] = field(default_factory=lambda: list(range(10,101,1)))
     lst_fee: List[float] = field(default_factory=lambda: FEES)
     cores: int = 1
+
+    def __post_init__(self):
+        if isinstance(self.lst_frequency, str) and self.lst_frequency.startswith('('):
+            try:
+                parts = [p.strip() for p in self.lst_frequency.strip('()').split(',')]
+                nums = [float(p) for p in parts]
+                if all('.' not in p for p in parts):
+                    self.lst_frequency = [int(x) for x in range(*[int(n) for n in nums])]
+                else:
+                    self.lst_frequency = np.arange(*nums).tolist()
+            except Exception as e:
+                logger.error(f"Failed to parse frequency range '{self.lst_frequency}': {e}")
+                raise e
 
 @dataclass
 class ComputeScoreConfig:

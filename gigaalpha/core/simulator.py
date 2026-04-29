@@ -12,7 +12,7 @@ class Simulator:
         self.gen_fn       = GEN_REGISTRY[gen_name]['function']
         self.gen_params   = gen_params
 
-        strategy_id = [str(frequency)] if frequency else []
+        strategy_id = [str(frequency)]
         for k in sorted(gen_params.keys()):
             v = gen_params[k]
             strategy_id.append(str(round(v, 4)) if isinstance(v, (float, int)) else str(v))
