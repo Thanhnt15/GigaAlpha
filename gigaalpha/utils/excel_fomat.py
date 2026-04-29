@@ -1,3 +1,4 @@
+import math
 import pandas as pd
 import logging
 from xlsxwriter.utility import xl_col_to_name
@@ -118,7 +119,10 @@ def apply_excel_report_formatting(workbook, worksheet, df: pd.DataFrame, summary
         for r, val in enumerate(df[col]):
             if isinstance(val, (tuple, list, dict)):
                 val = str(val)
-            worksheet.write(r + 1, i, val, data_fmt)
+            if isinstance(val, float) and math.isnan(val):
+                worksheet.write_blank(r + 1, i, None, data_fmt)
+            else:
+                worksheet.write(r + 1, i, val, data_fmt)
         max_len = max(df[col].astype(str).map(len).max() if not df.empty else 0, len(str(col))) + 1
         worksheet.set_column(i, i, min(max_len, 50))
         if col in color_rules:
@@ -143,7 +147,10 @@ def apply_excel_report_formatting(workbook, worksheet, df: pd.DataFrame, summary
                             p = float(str(val).split('(')[1].split('%')[0])
                             fmt = f_red if p < 30 else (f_yel if p < 50 else f_grn)
                     except: pass
-                worksheet.write(r + 1, curr_col, val, fmt)
+                if isinstance(val, float) and math.isnan(val):
+                    worksheet.write_blank(r + 1, curr_col, None, fmt)
+                else:
+                    worksheet.write(r + 1, curr_col, val, fmt)
             max_len = max(summary_df[col].astype(str).map(len).max() if not summary_df.empty else 0, len(str(col))) + 1
             worksheet.set_column(curr_col, curr_col, min(max_len, 50))
         next_col += len(summary_df.columns)
@@ -164,7 +171,10 @@ def apply_excel_report_formatting(workbook, worksheet, df: pd.DataFrame, summary
                         p = float(str(val).split('(')[1].split('%')[0])
                         fmt = f_red if p < 30 else (f_yel if p < 50 else f_grn)
                 except: pass
-                worksheet.write(r + 1, curr_col, val, fmt)
+                if isinstance(val, float) and math.isnan(val):
+                    worksheet.write_blank(r + 1, curr_col, None, fmt)
+                else:
+                    worksheet.write(r + 1, curr_col, val, fmt)
             max_len = max(temp_df[col].astype(str).map(len).max() if not temp_df.empty else 0, len(str(col))) + 1
             worksheet.set_column(curr_col, curr_col, min(max_len, 50))
 

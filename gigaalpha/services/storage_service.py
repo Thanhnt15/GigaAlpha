@@ -20,7 +20,7 @@ class StorageService:
             processed_df = rename_and_reorder_report_columns(processed_df)
             
             os.makedirs(os.path.dirname(self.output_path), exist_ok=True)
-            writer = pd.ExcelWriter(self.output_path, engine='xlsxwriter', engine_kwargs={'options': {'nan_inf_to_errors': True}})
+            writer = pd.ExcelWriter(self.output_path, engine='xlsxwriter')
             processed_df.to_excel(writer, index=False, sheet_name='Report')
             
             next_col = len(processed_df.columns)
