@@ -1,6 +1,7 @@
-import sys, logging, os, time, urllib.request, json, html
+import sys, logging, os, time, html, fcntl
 from logging.handlers import RotatingFileHandler
 from pathlib import Path
+from gigaalpha.helpers.telegram import TelegramBot
 
 def cleanup_old_logs(log_dir: Path, max_days: int = 7):
     """Deletes log files older than max_days in the specified directory."""
@@ -13,16 +14,13 @@ def cleanup_old_logs(log_dir: Path, max_days: int = 7):
     except Exception as e:
         print(f"Cleanup error: {e}", file=sys.stderr)
 
-import fcntl
-
 class TelegramHandler(logging.Handler):
-    """A minimalist logging handler with cross-process rate limiting."""
+    """A logging handler that sends alerts to Telegram with cross-process rate limiting."""
     COOLDOWN_SECONDS = 60   # Minimum seconds between Telegram alerts
     
     def __init__(self, token: str, chat_id: str):
         super().__init__()
-        self.token = token
-        self.chat_id = chat_id
+        self.bot = TelegramBot(token, chat_id)
         project_root = Path(__file__).resolve().parents[2]
         self.cooldown_file = project_root / "logs" / ".tele_cooldown"
 
@@ -53,39 +51,26 @@ class TelegramHandler(logging.Handler):
             print(f"Rate Limiter Lock Error: {e}", file=sys.stderr)
             return False
 
-    def emit(self, record):
-        if not self.token or not self.chat_id:
-            return
+    def _format_alert(self, record) -> str:
+        """Builds a concise HTML alert message from a log record."""
+        main_msg = record.getMessage().split('\n')[0]
+        
+        if record.exc_info and record.exc_info[1]:
+            exc_summary = str(record.exc_info[1]).split('\n')[0]
+            content = f"{main_msg} | {exc_summary}"
+        else:
+            content = main_msg
 
+        safe_content = html.escape(content[:500])
+        icon = "🚨" if record.levelno >= logging.ERROR else "⚠️"
+        title = "Error" if record.levelno >= logging.ERROR else "Warning"
+        return f"{icon} <b>{title}</b>\n<code>{safe_content}</code>"
+
+    def emit(self, record):
         if self._should_throttle():
             return
-
         try:
-            main_msg = record.getMessage().split('\n')[0]
-            
-            if record.exc_info and record.exc_info[1]:
-                exc_summary = str(record.exc_info[1]).split('\n')[0]
-                content = f"{main_msg} | {exc_summary}"
-            else:
-                content = main_msg
-
-            safe_content = html.escape(content[:500])
-            
-            icon = "🚨" if record.levelno >= logging.ERROR else "⚠️"
-            title = "Error" if record.levelno >= logging.ERROR else "Warning"   
-            
-            message = f"{icon} <b>{title}</b>\n<code>{safe_content}</code>"
-            
-            url = f"https://api.telegram.org/bot{self.token}/sendMessage"
-            data = json.dumps({
-                "chat_id": self.chat_id,
-                "text": message,
-                "parse_mode": "HTML"
-            }).encode('utf-8')
-            
-            req = urllib.request.Request(url, data=data, headers={'Content-Type': 'application/json'})
-            with urllib.request.urlopen(req, timeout=5):
-                pass
+            self.bot.send_message(self._format_alert(record))
         except Exception as e:
             print(f"Telegram Handler Error: {e}", file=sys.stderr)
 
